@@ -28,3 +28,26 @@ api.saveMatImage(api.getMatNavCam(), "Navcam-ori:P1.png");
 
 各種旋轉制轉換器
 https://www.andre-gaschler.com/rotationconverter/
+
+# 版本紀錄
+
+## V1
+
+- 先走到底下
+- 再走到點
+- 再回到底下
+- 不停重複
+- 結果：撞牆
+
+## V2
+
+- 微調第3個點跟牆的距離
+- 結果：撞牆again
+- 發現： Astrobee 是一個32cm的方塊（要算）
+
+## V3
+
+- 增加牆厚度
+- 若撞牆 => 判斷在牆中心左邊還右邊，偏左放左，偏右放右
+- 結果：依然撞牆
+- 發現：Dockcam 似乎比 Navcam 方向優秀？
