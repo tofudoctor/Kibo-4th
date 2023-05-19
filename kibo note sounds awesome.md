@@ -31,7 +31,7 @@ https://www.andre-gaschler.com/rotationconverter/
 
 # 版本紀錄
 
-## V1
+## V1.0
 
 - 先走到底下
 - 再走到點
@@ -39,15 +39,20 @@ https://www.andre-gaschler.com/rotationconverter/
 - 不停重複
 - 結果：撞牆
 
-## V2
+## V1.1
 
 - 微調第3個點跟牆的距離
 - 結果：撞牆again
 - 發現： Astrobee 是一個32cm的方塊（要算）
 
-## V3
+## V1.2
 
 - 增加牆厚度
 - 若撞牆 => 判斷在牆中心左邊還右邊，偏左放左，偏右放右
 - 結果：依然撞牆
 - 發現：Dockcam 似乎比 Navcam 方向優秀？
+
+## v1.3
+- 測試各個Target
+- 結果：剩 P2 會撞牆
+- 發現：Target 和 Point 不一樣

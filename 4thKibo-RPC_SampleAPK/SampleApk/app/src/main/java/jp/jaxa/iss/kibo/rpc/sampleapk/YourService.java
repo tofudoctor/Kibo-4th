@@ -64,9 +64,13 @@ public class YourService extends KiboRpcService {
         return res;
     }
 
+    private void show_point_log(Point p) {
+        Log.i(TAG, String.valueOf(p.getX()) + String.valueOf(p.getY()) + String.valueOf(p.getZ()));
+    }
+
     private Point savepoint(Point p){
         float x = (float)p.getX(), y = (float)p.getY();
-        float eps = 0.16f;
+        float eps = 0.1f;
         for(int i = 0;i < 5;i++){
             if(KOZ[i][0][0] - eps <= p.getX() && KOZ[i][0][1] + eps >= p.getX()){
                 if((KOZ[i][0][0] + KOZ[i][0][1]) / 2 >= p.getX()) x = (float)KOZ[i][0][0] - eps;
@@ -80,6 +84,7 @@ public class YourService extends KiboRpcService {
 
         return new Point(x, y, p.getZ());
     }
+
 
     @Override
     protected void runPlan1(){
@@ -127,49 +132,98 @@ public class YourService extends KiboRpcService {
                 new Quaternion(quarX[5], quarY[5], quarZ[5], quarW[5]),
                 new Quaternion(quarX[6], quarY[6], quarZ[6], quarW[6])
         };
-
         Quaternion test = new Quaternion(0,-1,0,0);
+
+        // T2 = P1 + Q3
+        // T4 = P3 + Q5
+        // T6 = P5 + Q0 (opposite)
+        // QRcode = P6 + Q3(left) || Q4(opposite)
+        // T3(?) = P7 + Q5 (small)
+        // T5 = P4 + Q6 (not in middle)
+        // T1(?) = P2 (crash)
 
         api.moveTo(point, test, true);
         api.moveTo(pointz, test, true);
         Log.i(TAG, "arrive start z");
 
         int touch = 0;
-        Point cur = new Point(0, 0 , 0);
-        while(touch < 7){
-            cur = P[touch + 7];
-            api.moveTo(cur, quaternion[touch], true);
-            Log.i(TAG, "arrive p" + Integer.toString(touch + 1) + " z");
+        Point cur = pointz;
+//        while(touch < 7){
+//            cur = P[touch + 7];
+//            api.moveTo(cur, quaternion[touch], true);
+//            Log.i(TAG, "arrive p" + Integer.toString(touch + 1) + " z");
+//
+//
+//            cur = savepoint(cur);
+//            api.moveTo(cur, quaternion[touch], true);
+//            Log.i(TAG, "arrive savepoint" + Integer.toString(touch + 1) + " z");
+//
+//
+//            cur = new Point(cur.getX(), cur.getY(), posZ[touch + 1]);
+//            api.moveTo(cur, quaternion[touch], true);
+//            Log.i(TAG, "arrive p" + Integer.toString(touch + 1));
+//            api.laserControl(true);
+//            api.flashlightControlFront(0.05f);
+//            api.laserControl(false);
+//            api.saveMatImage(api.getMatNavCam(), photo_name(touch + 1));
+//
+//
+//            cur = new Point(cur.getX(), cur.getY(), 5.17);
+//            api.moveTo(cur, quaternion[touch], true);
+//            Log.i(TAG, "back to p" + Integer.toString(touch + 1) + " z");
+//
+//
+//
+//
+//            touch++;
+//            String tmp = "";
+//            tmp += "arrive p";
+//            tmp += Integer.toString(touch);
+//
+//            Log.i(TAG, tmp);
+//        }
 
 
-            cur = savepoint(cur);
-            api.moveTo(P[touch + 7], quaternion[touch], true);
-            Log.i(TAG, "arrive savepoint" + Integer.toString(touch + 1) + " z");
 
 
-            cur = new Point(cur.getX(), cur.getY(), posZ[touch + 1]);
-            api.moveTo(cur, quaternion[touch], true);
-            Log.i(TAG, "arrive p" + Integer.toString(touch + 1));
+        // test
+
+        for(int j = 0;j < 7;j++){
+            int i = 4;
+            Point p = P[i + 7];
+            Quaternion q = quaternion[j];// new Quaternion(0,-1,0,0);
+
+            api.moveTo(p, q, true);
+            show_point_log(p);
+            Log.i(TAG, "arrive p" + Integer.toString(i) + " z");
+
+
+            p = savepoint(p);
+            api.moveTo(p, q, true);
+            show_point_log(p);
+            Log.i(TAG, "arrive savepoint" + Integer.toString(i) + " z");
+
+
+            p = new Point(p.getX(), p.getY(), posZ[i + 1]);
+            api.moveTo(p, q, true);
+            show_point_log(p);
+            Log.i(TAG, "arrive p" + Integer.toString(i));
             api.laserControl(true);
             api.flashlightControlFront(0.05f);
             api.laserControl(false);
-            api.saveMatImage(api.getMatNavCam(), photo_name(touch + 1));
+            api.saveMatImage(api.getMatNavCam(), photo_name(j));
 
 
-            cur = new Point(cur.getX(), cur.getY(), 5.17);
-            api.moveTo(cur, quaternion[touch], true);
-            Log.i(TAG, "back to p" + Integer.toString(touch + 1) + " z");
+            p = new Point(p.getX(), p.getY(), 5.17);
+            api.moveTo(p, q, true);
+            show_point_log(p);
+            Log.i(TAG, "back to p" + Integer.toString(i) + " z");
 
-
-
-
-            touch++;
-            String tmp = "";
-            tmp += "arrive p";
-            tmp += Integer.toString(touch);
-
-            Log.i(TAG, tmp);
         }
+
+
+
+
 
 
         api.moveTo(P[15], test, true);
