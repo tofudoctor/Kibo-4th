@@ -26,8 +26,11 @@ api.saveMatImage(api.getMatNavCam(), "Navcam-ori:P1.png");
 
 要加副檔名！！! 不然要自己改
 
-各種旋轉制轉換器
+## 各種旋轉制轉換器
 https://www.andre-gaschler.com/rotationconverter/
+
+## 要是視覺辨識不出來
+opencv 可以做影像處理(邊緣辨識)替換掉原本圖片再做辨識。(Reference: https://youtu.be/Iel-7bw10m8)
 
 # 版本紀錄
 
@@ -51,6 +54,7 @@ https://www.andre-gaschler.com/rotationconverter/
 - 若撞牆 => 判斷在牆中心左邊還右邊，偏左放左，偏右放右
 - 結果：依然撞牆
 - 發現：Dockcam 似乎比 Navcam 方向優秀？
+
 
 ## v1.3
 - 測試各個Target
