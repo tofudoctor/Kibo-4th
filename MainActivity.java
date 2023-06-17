@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         // Log.i("NeverCaresYou", String.valueOf(bitmap.getWidth()));
 
         if (! OpenCVLoader.initDebug()) {
-            Log.e("NeverCaresYou", "init fail");
+            Log.e("NeverCaresyoU", "init fail");
             return;
         }
 
@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        Log.d("NeverCaresYou", "size" + rgba.size());
-        Log.i("NeverCaresYou", String.valueOf(rgba.channels()));
+        Log.d("NeverCaresyoU", "size" + rgba.size());
+        Log.i("NeverCaresyoU", String.valueOf(rgba.channels()));
 
         Mat gray = new Mat();
         Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
@@ -63,10 +63,10 @@ public class MainActivity extends AppCompatActivity {
         Aruco.detectMarkers(gray, dictionary, corners, ids);
 
         for (int i = 0 ; i < corners.size() ; i++) {
-            Log.i("NeverCaresYou", corners.get(i).dump());
+            Log.i("NeverCaresyoU", corners.get(i).dump());
         }
 
-        Log.i("NeverCaresYou", ids.dump());
+        Log.i("NeverCaresyoU", ids.dump());
 
     }
 }
