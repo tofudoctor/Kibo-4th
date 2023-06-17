@@ -60,3 +60,8 @@ opencv 可以做影像處理(邊緣辨識)替換掉原本圖片再做辨識。(R
 - 測試各個Target
 - 結果：剩 P2 會撞牆
 - 發現：Target 和 Point 不一樣
+
+## v1.4
+- Eular to quaternion (ref. https://quaternions.online/)
+- point is in KIZ to shoot the target (target out of KIZ)
+-  scan AR tag seems that can navigate the position of taeget faster
