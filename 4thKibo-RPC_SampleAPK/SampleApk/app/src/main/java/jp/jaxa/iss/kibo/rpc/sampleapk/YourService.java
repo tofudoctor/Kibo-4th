@@ -188,42 +188,233 @@ public class YourService extends KiboRpcService {
 
         // test
 
-        for(int j = 0;j < 7;j++){
-            int i = 4;
-            Point p = P[i + 7];
-            Quaternion q = quaternion[j];// new Quaternion(0,-1,0,0);
-
-            api.moveTo(p, q, true);
-            show_point_log(p);
-            Log.i(TAG, "arrive p" + Integer.toString(i) + " z");
-
-
-            p = savepoint(p);
-            api.moveTo(p, q, true);
-            show_point_log(p);
-            Log.i(TAG, "arrive savepoint" + Integer.toString(i) + " z");
-
-
-            p = new Point(p.getX(), p.getY(), posZ[i + 1]);
-            api.moveTo(p, q, true);
-            show_point_log(p);
-            Log.i(TAG, "arrive p" + Integer.toString(i));
-            api.laserControl(true);
-            api.flashlightControlFront(0.05f);
-            api.laserControl(false);
-            api.saveMatImage(api.getMatNavCam(), photo_name(j));
-
-
-            p = new Point(p.getX(), p.getY(), 5.17);
-            api.moveTo(p, q, true);
-            show_point_log(p);
-            Log.i(TAG, "back to p" + Integer.toString(i) + " z");
-
-        }
-
-
+//        for(int j = 0;j < 7;j++){
+//            int i = 4;
+//            Point p = P[i + 7];
+//            Quaternion q = quaternion[j];// new Quaternion(0,-1,0,0);
+//
+//            api.moveTo(p, q, true);
+//            show_point_log(p);
+//            Log.i(TAG, "arrive p" + Integer.toString(i) + " z");
+//
+//
+//            p = savepoint(p);
+//            api.moveTo(p, q, true);
+//            show_point_log(p);
+//            Log.i(TAG, "arrive savepoint" + Integer.toString(i) + " z");
+//
+//
+//            p = new Point(p.getX(), p.getY(), posZ[i + 1]);
+//            api.moveTo(p, q, true);
+//            show_point_log(p);
+//            Log.i(TAG, "arrive p" + Integer.toString(i));
+//            api.laserControl(true);
+//            api.flashlightControlFront(0.05f);
+//            api.laserControl(false);
+//            api.saveMatImage(api.getMatNavCam(), photo_name(j));
+//
+//
+//            p = new Point(p.getX(), p.getY(), 5.17);
+//            api.moveTo(p, q, true);
+//            show_point_log(p);
+//            Log.i(TAG, "back to p" + Integer.toString(i) + " z");
+//
+//        }
 
 
+        // T2 = P1 + Q3
+        Point p = P[1 + 7];
+        Quaternion q = quaternion[3];// new Quaternion(0,-1,0,0);
+
+
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T2 z");
+
+
+        p = savepoint(p);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive savepoint T2 z");
+
+
+        p = new Point(p.getX(), p.getY(), posZ[1 + 1]);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T2");
+        api.laserControl(true);
+        api.flashlightControlFront(0.05f);
+        api.laserControl(false);
+        api.saveMatImage(api.getMatNavCam(), photo_name(2));
+
+
+        p = new Point(p.getX(), p.getY(), 5.17);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "back to T2 z");
+
+
+
+        // T4 = P3 + Q5
+        p = P[3 + 7];
+        q = quaternion[5];// new Quaternion(0,-1,0,0);
+
+
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T4 z");
+
+
+        p = savepoint(p);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive savepoint T4 z");
+
+
+        p = new Point(p.getX(), p.getY(), posZ[3 + 1]);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T4");
+        api.laserControl(true);
+        api.flashlightControlFront(0.05f);
+        api.laserControl(false);
+        api.saveMatImage(api.getMatNavCam(), photo_name(4));
+
+
+        p = new Point(p.getX(), p.getY(), 5.17);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "back to T4 z");
+
+
+
+        // T6 = P5 + Q0 (opposite)
+        p = P[5 + 7];
+        q = quaternion[0];// new Quaternion(0,-1,0,0);
+
+
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T6 z");
+
+
+        p = savepoint(p);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive savepoint T6 z");
+
+
+        p = new Point(p.getX(), p.getY(), posZ[5 + 1]);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T6");
+        api.laserControl(true);
+        api.flashlightControlFront(0.05f);
+        api.laserControl(false);
+        api.saveMatImage(api.getMatNavCam(), photo_name(6));
+
+
+        p = new Point(p.getX(), p.getY(), 5.17);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "back to T6 z");
+
+
+
+        // QRcode = P6 + Q3(left) || Q4(opposite)
+        p = P[6 + 7];
+        q = quaternion[4];// new Quaternion(0,-1,0,0);
+
+
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive QR z");
+
+
+        p = savepoint(p);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive savepoint QR z");
+
+
+        p = new Point(p.getX(), p.getY(), posZ[6 + 1]);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive QR");
+        api.laserControl(true);
+        api.flashlightControlFront(0.05f);
+        api.laserControl(false);
+        api.saveMatImage(api.getMatNavCam(), photo_name(100));
+
+
+        p = new Point(p.getX(), p.getY(), 5.17);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "back to QR z");
+
+
+        // T5 = P4 + Q6 (not in middle)
+        p = P[4 + 7];
+        q = quaternion[6];// new Quaternion(0,-1,0,0);
+
+
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T5 z");
+
+
+        p = savepoint(p);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive savepoint T5 z");
+
+
+        p = new Point(p.getX(), p.getY(), posZ[4 + 1]);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T6");
+        api.laserControl(true);
+        api.flashlightControlFront(0.05f);
+        api.laserControl(false);
+        api.saveMatImage(api.getMatNavCam(), photo_name(5));
+
+
+        p = new Point(p.getX(), p.getY(), 5.17);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "back to T6 z");
+
+
+        // T3(?) = P7 + Q5 (small)
+        p = P[7 + 7];
+        q = quaternion[5];// new Quaternion(0,-1,0,0);
+
+
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T3 z");
+
+
+        p = savepoint(p);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive savepoint T3 z");
+
+
+        p = new Point(p.getX(), p.getY(), posZ[7 + 1]);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T3");
+        api.laserControl(true);
+        api.flashlightControlFront(0.05f);
+        api.laserControl(false);
+        api.saveMatImage(api.getMatNavCam(), photo_name(3));
+
+
+        p = new Point(p.getX(), p.getY(), 5.17);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "back to T3 z");
 
 
         api.moveTo(P[15], test, true);
