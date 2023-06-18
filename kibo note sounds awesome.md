@@ -65,3 +65,23 @@ opencv 可以做影像處理(邊緣辨識)替換掉原本圖片再做辨識。(R
 - Eular to quaternion (ref. https://quaternions.online/)
 - point is in KIZ to shoot the target (target out of KIZ)
 -  scan AR tag seems that can navigate the position of taeget faster
+
+
+## v1.5
+- QRcode scan code:
+private String scanQRcode() {
+        Map<String, String> map = new HashMap<>();
+        map.put("JEM", "STAY_AT_JEM");
+        map.put("COLUMBUS", "GO_TO_COLUMBUS");
+        map.put("RACK1", "CHECK_RACK_1");
+        map.put("ASTROBEE", "I_AM_HERE");
+        map.put("INTBALL", "LOOKING_FORWARD_TO_SEE_YOU");
+        map.put("BLANK", "NO_PROBLEM");
+
+        MatOfPoint point = new MatOfPoint();
+        QRCodeDetector detector = new QRCodeDetector();
+
+        String data = detector.detectAndDecode(api.getMatNavCam(), point);
+        return map.get(data);
+    }
+usage : String mes = scanQRcode();
