@@ -69,6 +69,7 @@ opencv 可以做影像處理(邊緣辨識)替換掉原本圖片再做辨識。(R
 
 ## v1.5
 - QRcode scan code:
+```
 private String scanQRcode() {
         Map<String, String> map = new HashMap<>();
         map.put("JEM", "STAY_AT_JEM");
@@ -84,4 +85,5 @@ private String scanQRcode() {
         String data = detector.detectAndDecode(api.getMatNavCam(), point);
         return map.get(data);
     }
+```
 usage : String mes = scanQRcode();
