@@ -32,6 +32,9 @@ https://www.andre-gaschler.com/rotationconverter/
 ## 要是視覺辨識不出來
 opencv 可以做影像處理(邊緣辨識)替換掉原本圖片再做辨識。(Reference: https://youtu.be/Iel-7bw10m8)
 
+
+## 坐標軸 1 約 60 cm !!!!!
+
 # 版本紀錄
 
 ## V1.0
