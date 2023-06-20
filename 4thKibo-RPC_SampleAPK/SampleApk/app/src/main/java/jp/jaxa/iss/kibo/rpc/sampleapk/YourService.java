@@ -9,8 +9,14 @@ import gov.nasa.arc.astrobee.Result;
 import gov.nasa.arc.astrobee.android.gs.MessageType;
 import gov.nasa.arc.astrobee.types.Point;
 import gov.nasa.arc.astrobee.types.Quaternion;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.opencv.core.Mat;
+
+import org.opencv.core.MatOfPoint;
+import org.opencv.objdetect.QRCodeDetector;
+
 
 /**
  * Class meant to handle commands from the Ground Data System and execute them in Astrobee
@@ -64,33 +70,26 @@ public class YourService extends KiboRpcService {
         return res;
     }
 
-    private void show_point_log(Point p) {
-        Log.i(TAG, String.valueOf(p.getX()) + String.valueOf(p.getY()) + String.valueOf(p.getZ()));
+
+    private String scanQRcode() {
+        Map<String, String> map = new HashMap<>();
+        map.put("JEM", "STAY_AT_JEM");
+        map.put("COLUMBUS", "GO_TO_COLUMBUS");
+        map.put("RACK1", "CHECK_RACK_1");
+        map.put("ASTROBEE", "I_AM_HERE");
+        map.put("INTBALL", "LOOKING_FORWARD_TO_SEE_YOU");
+        map.put("BLANK", "NO_PROBLEM");
+
+        MatOfPoint point = new MatOfPoint();
+        QRCodeDetector detector = new QRCodeDetector();
+
+        String data = detector.detectAndDecode(api.getMatNavCam(), point);
+        return map.get(data);
     }
-
-    private Point savepoint(Point p){
-        float x = (float)p.getX(), y = (float)p.getY();
-        float eps = 0.1f;
-        for(int i = 0;i < 5;i++){
-            if(KOZ[i][0][0] - eps <= p.getX() && KOZ[i][0][1] + eps >= p.getX()){
-                if((KOZ[i][0][0] + KOZ[i][0][1]) / 2 >= p.getX()) x = (float)KOZ[i][0][0] - eps;
-                else x = (float)KOZ[i][0][1] + eps;
-            }
-            else if(KOZ[i][1][0] - eps <= p.getY() && KOZ[i][1][1] + eps >= p.getY()){
-                if((KOZ[i][1][0] + KOZ[i][1][1]) / 2 >= p.getY()) y = (float)KOZ[i][1][0] - eps;
-                else y = (float)KOZ[i][1][1] + eps;
-            }
-        }
-
-        return new Point(x, y, p.getZ());
-    }
-
 
     @Override
     protected void runPlan1(){
-        String position;
         api.startMission();
-        double[] posP3 = new double[6]; //for storing the co-ordinates of P3
         //Astrobee 1 ft cube  = 0.3048 meter per side, half approx = 0.16 m, diagonally half length = 0.22 m
         //the below 7 arrays constitute the position of P1-1 to P2-3
         double[] posX = {9.815, 11.2746, 10.612, 10.71, 10.51, 11.114, 11.355, 11.369, 11.143}; //4th value 10.30 ....10.25 + 0.22 = 10.47
@@ -100,330 +99,147 @@ public class YourService extends KiboRpcService {
         float[] quarY = {0, 0, 0, 0.5f, 0.707f, 0, -0.5f};
         float[] quarZ = {0, -0.707f, -0.707f, -0.5f, 0, -1, -0.5f};
         float[] quarW = {0, 0.707f, 0.707f, 0.5f, 0.707f, 0, 0.5f};
-        Point point = new Point(10.4f, -10, 4.4f);
-        Point pointz = new Point(10.4f, -10, 5.16f);
+        float down = 5.25f;
         Point[] P = {
-                new Point(posX[1], posY[1], posZ[1]),
-                new Point(posX[2], posY[2], posZ[2]),
-                new Point(posX[3], posY[3], posZ[3]),
-                new Point(posX[4], posY[4], posZ[4]),
-                new Point(posX[5], posY[5], posZ[5]),
-                new Point(posX[6], posY[6], posZ[6]),
-                new Point(posX[7], posY[7], posZ[7]),
-                new Point(posX[1], posY[1], 5.17f),
-                new Point(posX[2], posY[2], 5.17f),
-                new Point(posX[3], posY[3], 5.17f),
-                new Point(posX[4], posY[4], 5.17f),
-                new Point(posX[5], posY[5], 5.17f),
-                new Point(posX[6], posY[6], 5.17f),
-                new Point(posX[7], posY[7], 5.17f),
-                new Point(posX[8], posY[8], posZ[8]),
-                new Point(posX[8], posY[8], 5.17f),
-        };
-        Point firstPoint = new Point(posX[1], posY[0], posZ[0]);
-        Point secondPoint = new Point(posX[1], posY[1], posZ[0]);
-        Point thirdPoint = new Point(posX[1], posY[1], posZ[1]);
-        Quaternion[] quaternion = {
-                new Quaternion(quarX[0], quarY[0], quarZ[0], quarW[0]),
-                new Quaternion(quarX[1], quarY[1], quarZ[1], quarW[1]),
-                new Quaternion(quarX[2], quarY[2], quarZ[2], quarW[2]),
-                new Quaternion(quarX[3], quarY[3], quarZ[3], quarW[3]),
-                new Quaternion(quarX[4], quarY[4], quarZ[4], quarW[4]),
-                new Quaternion(quarX[5], quarY[5], quarZ[5], quarW[5]),
-                new Quaternion(quarX[6], quarY[6], quarZ[6], quarW[6])
-        };
-        Quaternion test = new Quaternion(0,-1,0,0);
+                new Point(10.4f    , -10       , 4.4f),       // start(0)
+                new Point(11.2746f , -9.92284f , 5.2988f),    //v
+                new Point(10.612f  , -9.0709f  , 4.48f),      //v
+                new Point(10.71f   , -7.7f     , 4.48f),      //v
+                new Point(10.51f   , -6.7185f  , 5.1804f),    //v
+                new Point(11.114f  , -7.9756f  , 5.3393f),    //v
+                new Point(11.355f  , -8.9929f  , 4.7818f),    //v
+                new Point(11.369f  , -8.5518   , 4.7818f),    // QR code(7)
+                new Point(11.143f  , -6.7607f  , 4.48f),      // goal(8)
+                new Point(10.4f    , -10       , down),         // startz(9 = 0 + 9)
+                new Point(11.2746f , -9.92284f , down),
+                new Point(10.612f  , -9.0709f  , down),
+                new Point(10.71f   , -7.7f     , down),
+                new Point(10.51f   , -6.7185f  , down),
+                new Point(11.114f  , -7.9756f  , down),
+                new Point(11.355f  , -8.9929f  , down),
+                new Point(11.369f  , -8.5518   , down),         // QR codez(16 = 7 + 9)
+                new Point(11.143f  , -6.7607f  , down),         // goalz(17 = 8 + 9)
 
+        };
+        Quaternion[] quaternion = {
+                new Quaternion(0, 0, 0, 0),                   // start
+                new Quaternion(0, 0, -0.707f, 0.707f),
+                new Quaternion(0.5f, 0.5f, -0.5f, 0.5f),
+                new Quaternion(0, 0.707f, 0, 0.707f),
+                new Quaternion(0, 0, -1, 0),
+                new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f),
+                new Quaternion(0, 0, 0, 1),
+                new Quaternion(0.707f,0,-0.707f,0)            // QR code
+        };
+
+        // T1(?) = P7 + Q5 (small)
         // T2 = P1 + Q3
+        // T3(?) = P2 (crash)
         // T4 = P3 + Q5
+        // T5 = P4 + Q6 (not in middle)
         // T6 = P5 + Q0 (opposite)
         // QRcode = P6 + Q3(left) || Q4(opposite)
-        // T3(?) = P7 + Q5 (small)
-        // T5 = P4 + Q6 (not in middle)
-        // T1(?) = P2 (crash)
 
-        api.moveTo(point, test, true);
-        api.moveTo(pointz, test, true);
+
+
+
+        Quaternion q = quaternion[0];
+        Point p = P[0];
+
+        api.moveTo(P[9], q, true);
         Log.i(TAG, "arrive start z");
 
-        int touch = 0;
-        Point cur = pointz;
-//        while(touch < 7){
-//            cur = P[touch + 7];
-//            api.moveTo(cur, quaternion[touch], true);
-//            Log.i(TAG, "arrive p" + Integer.toString(touch + 1) + " z");
-//
-//
-//            cur = savepoint(cur);
-//            api.moveTo(cur, quaternion[touch], true);
-//            Log.i(TAG, "arrive savepoint" + Integer.toString(touch + 1) + " z");
-//
-//
-//            cur = new Point(cur.getX(), cur.getY(), posZ[touch + 1]);
-//            api.moveTo(cur, quaternion[touch], true);
-//            Log.i(TAG, "arrive p" + Integer.toString(touch + 1));
-//            api.laserControl(true);
-//            api.flashlightControlFront(0.05f);
-//            api.laserControl(false);
-//            api.saveMatImage(api.getMatNavCam(), photo_name(touch + 1));
-//
-//
-//            cur = new Point(cur.getX(), cur.getY(), 5.17);
-//            api.moveTo(cur, quaternion[touch], true);
-//            Log.i(TAG, "back to p" + Integer.toString(touch + 1) + " z");
-//
-//
-//
-//
-//            touch++;
-//            String tmp = "";
-//            tmp += "arrive p";
-//            tmp += Integer.toString(touch);
-//
-//            Log.i(TAG, tmp);
-//        }
-
-
-
-
-        // test
-
-//        for(int j = 0;j < 7;j++){
-//            int i = 4;
-//            Point p = P[i + 7];
-//            Quaternion q = quaternion[j];// new Quaternion(0,-1,0,0);
-//
-//            api.moveTo(p, q, true);
-//            show_point_log(p);
-//            Log.i(TAG, "arrive p" + Integer.toString(i) + " z");
-//
-//
-//            p = savepoint(p);
-//            api.moveTo(p, q, true);
-//            show_point_log(p);
-//            Log.i(TAG, "arrive savepoint" + Integer.toString(i) + " z");
-//
-//
-//            p = new Point(p.getX(), p.getY(), posZ[i + 1]);
-//            api.moveTo(p, q, true);
-//            show_point_log(p);
-//            Log.i(TAG, "arrive p" + Integer.toString(i));
-//            api.laserControl(true);
-//            api.flashlightControlFront(0.05f);
-//            api.laserControl(false);
-//            api.saveMatImage(api.getMatNavCam(), photo_name(j));
-//
-//
-//            p = new Point(p.getX(), p.getY(), 5.17);
-//            api.moveTo(p, q, true);
-//            show_point_log(p);
-//            Log.i(TAG, "back to p" + Integer.toString(i) + " z");
-//
-//        }
-
-
-        // T2 = P1 + Q3
-        Point p = P[1 + 7];
-        Quaternion q = quaternion[3];// new Quaternion(0,-1,0,0);
+        // QRcode
+        p = P[16];
+        q = quaternion[7];
 
 
         api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T2 z");
-
-
-        p = savepoint(p);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive savepoint T2 z");
-
-
-        p = new Point(p.getX(), p.getY(), posZ[1 + 1]);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T2");
-        api.laserControl(true);
-        api.flashlightControlFront(0.05f);
-        api.laserControl(false);
-        api.saveMatImage(api.getMatNavCam(), photo_name(2));
-
-
-        p = new Point(p.getX(), p.getY(), 5.17);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "back to T2 z");
-
-
-
-        // T4 = P3 + Q5
-        p = P[3 + 7];
-        q = quaternion[5];// new Quaternion(0,-1,0,0);
-
-
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T4 z");
-
-
-        p = savepoint(p);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive savepoint T4 z");
-
-
-        p = new Point(p.getX(), p.getY(), posZ[3 + 1]);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T4");
-        api.laserControl(true);
-        api.flashlightControlFront(0.05f);
-        api.laserControl(false);
-        api.saveMatImage(api.getMatNavCam(), photo_name(4));
-
-
-        p = new Point(p.getX(), p.getY(), 5.17);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "back to T4 z");
-
-
-
-        // T6 = P5 + Q0 (opposite)
-        p = P[5 + 7];
-        q = quaternion[0];// new Quaternion(0,-1,0,0);
-
-
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T6 z");
-
-
-        p = savepoint(p);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive savepoint T6 z");
-
-
-        p = new Point(p.getX(), p.getY(), posZ[5 + 1]);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T6");
-        api.laserControl(true);
-        api.flashlightControlFront(0.05f);
-        api.laserControl(false);
-        api.saveMatImage(api.getMatNavCam(), photo_name(6));
-
-
-        p = new Point(p.getX(), p.getY(), 5.17);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "back to T6 z");
-
-
-
-        // QRcode = P6 + Q3(left) || Q4(opposite)
-        p = P[6 + 7];
-        q = quaternion[4];// new Quaternion(0,-1,0,0);
-
-
-        api.moveTo(p, q, true);
-        show_point_log(p);
         Log.i(TAG, "arrive QR z");
 
-
-        p = savepoint(p);
+        p = P[7];
         api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive savepoint QR z");
-
-
-        p = new Point(p.getX(), p.getY(), posZ[6 + 1]);
-        api.moveTo(p, q, true);
-        show_point_log(p);
         Log.i(TAG, "arrive QR");
-        api.laserControl(true);
         api.flashlightControlFront(0.05f);
-        api.laserControl(false);
-        api.saveMatImage(api.getMatNavCam(), photo_name(100));
+        api.saveMatImage(api.getMatNavCam(), photo_name(103));
+        String mes = scanQRcode();
 
 
-        p = new Point(p.getX(), p.getY(), 5.17);
+        p = P[16];
         api.moveTo(p, q, true);
-        show_point_log(p);
         Log.i(TAG, "back to QR z");
 
+//        for(int i = 1;i <= 8;i++){
+//            q = quaternion[i];
+//
+//            if(i <= 2){
+//                p = P[11];
+//                api.moveTo(p, q, true);
+//                Log.i(TAG, "arrivez " + Integer.toString(i));
+//
+//
+//                p = P[i];
+//                api.moveTo(p, q, true);
+//                api.saveMatImage(api.getMatNavCam(), photo_name(i));
+//                Log.i(TAG, "arrive " + Integer.toString(i));
+//
+//
+//                p = P[11];
+//                api.moveTo(p, q, true);
+//                Log.i(TAG, "arrivez2 " + Integer.toString(i));
+//            }
+//            else if(i == 8 || i == 4){
+//                p = P[13];
+//                api.moveTo(p, q, true);
+//                Log.i(TAG, "arrivez " + Integer.toString(i));
+//
+//
+//                p = P[i];
+//                api.moveTo(p, q, true);
+//                api.saveMatImage(api.getMatNavCam(), photo_name(i));
+//                Log.i(TAG, "arrive " + Integer.toString(i));
+//
+//
+//                p = P[13];
+//                api.moveTo(p, q, true);
+//                Log.i(TAG, "arrivez2 " + Integer.toString(i));
+//            }
+//            else{
+//                p = P[16];
+//                api.moveTo(p, q, true);
+//                Log.i(TAG, "arrivez " + Integer.toString(i));
+//
+//                p = P[i];
+//                api.moveTo(p, q, true);
+//                api.saveMatImage(api.getMatNavCam(), photo_name(i));
+//                Log.i(TAG, "arrive " + Integer.toString(i));
+//
+//
+//                p = P[16];
+//                api.moveTo(p, q, true);
+//                Log.i(TAG, "arrivez2 " + Integer.toString(i));
+//            }
+//
+//
+//        }
 
-        // T5 = P4 + Q6 (not in middle)
-        p = P[4 + 7];
-        q = quaternion[6];// new Quaternion(0,-1,0,0);
 
-
+        api.notifyGoingToGoal();
+        p = P[13];
         api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T5 z");
+        Log.i(TAG, "arrivez " + Integer.toString(8));
 
 
-        p = savepoint(p);
+        p = P[8];
         api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive savepoint T5 z");
-
-
-        p = new Point(p.getX(), p.getY(), posZ[4 + 1]);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T6");
-        api.laserControl(true);
-        api.flashlightControlFront(0.05f);
-        api.laserControl(false);
-        api.saveMatImage(api.getMatNavCam(), photo_name(5));
-
-
-        p = new Point(p.getX(), p.getY(), 5.17);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "back to T6 z");
-
-
-        // T3(?) = P7 + Q5 (small)
-        p = P[7 + 7];
-        q = quaternion[5];// new Quaternion(0,-1,0,0);
-
-
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T3 z");
-
-
-        p = savepoint(p);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive savepoint T3 z");
-
-
-        p = new Point(p.getX(), p.getY(), posZ[7 + 1]);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T3");
-        api.laserControl(true);
-        api.flashlightControlFront(0.05f);
-        api.laserControl(false);
-        api.saveMatImage(api.getMatNavCam(), photo_name(3));
-
-
-        p = new Point(p.getX(), p.getY(), 5.17);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "back to T3 z");
-
-
-        api.moveTo(P[15], test, true);
-        Log.i(TAG, "arrive goal z");
-        api.moveTo(P[14], test, true);
         Log.i(TAG, "arrive goal");
+        api.reportMissionCompletion(mes);
 
-        api.reportMissionCompletion("");
+
         Log.i(TAG, "mission complete");
+
+
+
     }
 
     @Override
