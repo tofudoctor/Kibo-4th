@@ -99,16 +99,14 @@ public class YourService extends KiboRpcService {
         List<Integer> active = new LinkedList<>();
         api.startMission();
         remain = api.getTimeRemaining();
-        Log.i(TAG, remain.toString());
-        active = api.getActiveTargets();
-        Log.i(TAG, active.toString());
-        Point p = new Point(0, 0, 0);
-        Point first = new Point(0, 0, 0);
-        Quaternion q = new Quaternion(0, 0, 0, 0);
+        api.moveTo(new Point(10.4f, -10, 5.17f));
+        
 
         while(remain.get(1) > 90000) {
+            active = api.getActiveTargets();
             int length = active.size();
-            if (length == 1 && (! scanned)) {
+            
+            if ((! scanned) && length == 1) {
                 scanned = true;
                 endMes = scanQRcode();
             }
@@ -126,6 +124,8 @@ public class YourService extends KiboRpcService {
             }
 
             if (remain.get(1) > 90000) break;
+
+            remain = api.getTimeRemaining();
         }
 
         if (! scanned) {
