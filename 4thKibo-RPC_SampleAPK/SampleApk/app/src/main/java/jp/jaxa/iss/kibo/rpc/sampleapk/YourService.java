@@ -24,6 +24,40 @@ import org.opencv.objdetect.QRCodeDetector;
 
 public class YourService extends KiboRpcService {
     private static final String TAG = "KiboFiendFyre";
+    private float down = 5.25f;
+    private Quaternion q;
+    private Point p;
+    private Point[] P = {
+            new Point(10.4f    , -10       , 4.4f),       // start(0)
+            new Point(11.2746f , -9.92284f , 5.2988f),    //v
+            new Point(10.612f  , -9.0709f  , 4.48f),      //v
+            new Point(10.71f   , -7.7f     , 4.48f),      //v
+            new Point(10.51f   , -6.7185f  , 5.1804f),    //v
+            new Point(11.114f  , -7.9756f  , 5.3393f),    //v
+            new Point(11.355f  , -8.9929f  , 4.7818f),    //v
+            new Point(11.369f  , -8.5518   , 4.7818f),    // QR code(7)
+            new Point(11.143f  , -6.7607f  , 4.48f),      // goal(8)
+            new Point(10.4f    , -10       , down),         // startz(9 = 0 + 9)
+            new Point(11.2746f , -9.92284f , down),
+            new Point(10.612f  , -9.0709f  , down),
+            new Point(10.71f   , -7.7f     , down),
+            new Point(10.51f   , -6.7185f  , down),
+            new Point(11.114f  , -7.9756f  , down),
+            new Point(11.355f  , -8.9929f  , down),
+            new Point(11.369f  , -8.5518   , down),         // QR codez(16 = 7 + 9)
+            new Point(11.143f  , -6.7607f  , down),         // goalz(17 = 8 + 9)
+
+    };
+    private Quaternion[] quaternion = {
+            new Quaternion(0, 0, 0, 0),                   // start
+            new Quaternion(0, 0, -0.707f, 0.707f),
+            new Quaternion(0.5f, 0.5f, -0.5f, 0.5f),
+            new Quaternion(0, 0.707f, 0, 0.707f),
+            new Quaternion(0, 0, -1, 0),
+            new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f),
+            new Quaternion(0, 0, 0, 1),
+            new Quaternion(0.707f,0,-0.707f,0)            // QR code
+    };
 
     int flag_obstacle = 0;//keeping track of each obstacle crossed
 
@@ -87,6 +121,58 @@ public class YourService extends KiboRpcService {
         return map.get(data);
     }
 
+    private void gotoTarget(int x){ // T1 ~ T6
+        q = quaternion[x];
+
+        if(x <= 2){
+            p = P[11];
+            api.moveTo(p, q, true);
+            Log.i(TAG, "arrivez " + Integer.toString(x));
+
+
+            p = P[x];
+            api.moveTo(p, q, true);
+            api.saveMatImage(api.getMatNavCam(), photo_name(x));
+            Log.i(TAG, "arrive " + Integer.toString(x));
+
+
+            p = P[11];
+            api.moveTo(p, q, true);
+            Log.i(TAG, "arrivez2 " + Integer.toString(x));
+        }
+        else if(x == 4){
+            p = P[13];
+            api.moveTo(p, q, true);
+            Log.i(TAG, "arrivez " + Integer.toString(x));
+
+
+            p = P[x];
+            api.moveTo(p, q, true);
+            api.saveMatImage(api.getMatNavCam(), photo_name(x));
+            Log.i(TAG, "arrive " + Integer.toString(x));
+
+
+            p = P[13];
+            api.moveTo(p, q, true);
+            Log.i(TAG, "arrivez2 " + Integer.toString(x));
+        }
+        else{
+            p = P[16];
+            api.moveTo(p, q, true);
+            Log.i(TAG, "arrivez " + Integer.toString(x));
+
+            p = P[x];
+            api.moveTo(p, q, true);
+            api.saveMatImage(api.getMatNavCam(), photo_name(x));
+            Log.i(TAG, "arrive " + Integer.toString(x));
+
+
+            p = P[16];
+            api.moveTo(p, q, true);
+            Log.i(TAG, "arrivez2 " + Integer.toString(x));
+        }
+    }
+
     @Override
     protected void runPlan1(){
         api.startMission();
@@ -99,38 +185,7 @@ public class YourService extends KiboRpcService {
         float[] quarY = {0, 0, 0, 0.5f, 0.707f, 0, -0.5f};
         float[] quarZ = {0, -0.707f, -0.707f, -0.5f, 0, -1, -0.5f};
         float[] quarW = {0, 0.707f, 0.707f, 0.5f, 0.707f, 0, 0.5f};
-        float down = 5.25f;
-        Point[] P = {
-                new Point(10.4f    , -10       , 4.4f),       // start(0)
-                new Point(11.2746f , -9.92284f , 5.2988f),    //v
-                new Point(10.612f  , -9.0709f  , 4.48f),      //v
-                new Point(10.71f   , -7.7f     , 4.48f),      //v
-                new Point(10.51f   , -6.7185f  , 5.1804f),    //v
-                new Point(11.114f  , -7.9756f  , 5.3393f),    //v
-                new Point(11.355f  , -8.9929f  , 4.7818f),    //v
-                new Point(11.369f  , -8.5518   , 4.7818f),    // QR code(7)
-                new Point(11.143f  , -6.7607f  , 4.48f),      // goal(8)
-                new Point(10.4f    , -10       , down),         // startz(9 = 0 + 9)
-                new Point(11.2746f , -9.92284f , down),
-                new Point(10.612f  , -9.0709f  , down),
-                new Point(10.71f   , -7.7f     , down),
-                new Point(10.51f   , -6.7185f  , down),
-                new Point(11.114f  , -7.9756f  , down),
-                new Point(11.355f  , -8.9929f  , down),
-                new Point(11.369f  , -8.5518   , down),         // QR codez(16 = 7 + 9)
-                new Point(11.143f  , -6.7607f  , down),         // goalz(17 = 8 + 9)
 
-        };
-        Quaternion[] quaternion = {
-                new Quaternion(0, 0, 0, 0),                   // start
-                new Quaternion(0, 0, -0.707f, 0.707f),
-                new Quaternion(0.5f, 0.5f, -0.5f, 0.5f),
-                new Quaternion(0, 0.707f, 0, 0.707f),
-                new Quaternion(0, 0, -1, 0),
-                new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f),
-                new Quaternion(0, 0, 0, 1),
-                new Quaternion(0.707f,0,-0.707f,0)            // QR code
-        };
 
         // T1(?) = P7 + Q5 (small)
         // T2 = P1 + Q3
@@ -143,85 +198,33 @@ public class YourService extends KiboRpcService {
 
 
 
-        Quaternion q = quaternion[0];
-        Point p = P[0];
+        q = quaternion[0];
+        p = P[0];
 
-        api.moveTo(P[9], q, true);
-        Log.i(TAG, "arrive start z");
+//        api.moveTo(P[9], q, true);
+//        Log.i(TAG, "arrive start z");
+//
+//        // QRcode
+//        p = P[16];
+//        q = quaternion[7];
+//
+//
+//        api.moveTo(p, q, true);
+//        Log.i(TAG, "arrive QR z");
+//
+//        p = P[7];
+//        api.moveTo(p, q, true);
+//        Log.i(TAG, "arrive QR");
+//        api.flashlightControlFront(0.05f);
+//        api.saveMatImage(api.getMatNavCam(), photo_name(103));
+//        String mes = scanQRcode();
+//
+//
+//        p = P[16];
+//        api.moveTo(p, q, true);
+//        Log.i(TAG, "back to QR z");
 
-        // QRcode
-        p = P[16];
-        q = quaternion[7];
 
-
-        api.moveTo(p, q, true);
-        Log.i(TAG, "arrive QR z");
-
-        p = P[7];
-        api.moveTo(p, q, true);
-        Log.i(TAG, "arrive QR");
-        api.flashlightControlFront(0.05f);
-        api.saveMatImage(api.getMatNavCam(), photo_name(103));
-        String mes = scanQRcode();
-
-
-        p = P[16];
-        api.moveTo(p, q, true);
-        Log.i(TAG, "back to QR z");
-
-//        for(int i = 1;i <= 8;i++){
-//            q = quaternion[i];
-//
-//            if(i <= 2){
-//                p = P[11];
-//                api.moveTo(p, q, true);
-//                Log.i(TAG, "arrivez " + Integer.toString(i));
-//
-//
-//                p = P[i];
-//                api.moveTo(p, q, true);
-//                api.saveMatImage(api.getMatNavCam(), photo_name(i));
-//                Log.i(TAG, "arrive " + Integer.toString(i));
-//
-//
-//                p = P[11];
-//                api.moveTo(p, q, true);
-//                Log.i(TAG, "arrivez2 " + Integer.toString(i));
-//            }
-//            else if(i == 8 || i == 4){
-//                p = P[13];
-//                api.moveTo(p, q, true);
-//                Log.i(TAG, "arrivez " + Integer.toString(i));
-//
-//
-//                p = P[i];
-//                api.moveTo(p, q, true);
-//                api.saveMatImage(api.getMatNavCam(), photo_name(i));
-//                Log.i(TAG, "arrive " + Integer.toString(i));
-//
-//
-//                p = P[13];
-//                api.moveTo(p, q, true);
-//                Log.i(TAG, "arrivez2 " + Integer.toString(i));
-//            }
-//            else{
-//                p = P[16];
-//                api.moveTo(p, q, true);
-//                Log.i(TAG, "arrivez " + Integer.toString(i));
-//
-//                p = P[i];
-//                api.moveTo(p, q, true);
-//                api.saveMatImage(api.getMatNavCam(), photo_name(i));
-//                Log.i(TAG, "arrive " + Integer.toString(i));
-//
-//
-//                p = P[16];
-//                api.moveTo(p, q, true);
-//                Log.i(TAG, "arrivez2 " + Integer.toString(i));
-//            }
-//
-//
-//        }
 
 
         api.notifyGoingToGoal();
@@ -233,7 +236,7 @@ public class YourService extends KiboRpcService {
         p = P[8];
         api.moveTo(p, q, true);
         Log.i(TAG, "arrive goal");
-        api.reportMissionCompletion(mes);
+        // api.reportMissionCompletion(mes);
 
 
         Log.i(TAG, "mission complete");
