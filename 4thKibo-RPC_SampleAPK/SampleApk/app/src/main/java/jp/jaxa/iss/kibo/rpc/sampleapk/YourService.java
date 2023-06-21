@@ -27,6 +27,7 @@ public class YourService extends KiboRpcService {
     private float down = 5.25f;
     private Quaternion q;
     private Point p;
+    private String QRmes;
     private Point[] P = {
             new Point(10.4f    , -10       , 4.4f),       // start(0)
             new Point(11.2746f , -9.92284f , 5.2988f),    //v
@@ -121,6 +122,13 @@ public class YourService extends KiboRpcService {
         return map.get(data);
     }
 
+    private void gotoStart(){
+        p = P[9];
+        q = quaternion[0];
+        api.moveTo(p, q, true);
+        Log.i(TAG, "arrive start z");
+    }
+
     private void gotoTarget(int x){ // T1 ~ T6
         q = quaternion[x];
 
@@ -173,76 +181,54 @@ public class YourService extends KiboRpcService {
         }
     }
 
-    @Override
-    protected void runPlan1(){
-        api.startMission();
-        //Astrobee 1 ft cube  = 0.3048 meter per side, half approx = 0.16 m, diagonally half length = 0.22 m
-        //the below 7 arrays constitute the position of P1-1 to P2-3
-        double[] posX = {9.815, 11.2746, 10.612, 10.71, 10.51, 11.114, 11.355, 11.369, 11.143}; //4th value 10.30 ....10.25 + 0.22 = 10.47
-        double[] posY = {-9.806, -9.92284, -9.0709, -7.7, -6.7185, -7.9756, -8.9929, -8.5518, -6.7607};
-        double[] posZ = {4.293, 5.2988, 4.48, 4.48, 5.1804, 5.3393, 4.7818, 4.48, 4.9654}; //2nd value and 6th value = 5.55 KIZ_lim = 5.6 - 0.22 = 5.42
-        float[] quarX = {1, 0, 0, 0.5f, 0, 0, -0.5f};
-        float[] quarY = {0, 0, 0, 0.5f, 0.707f, 0, -0.5f};
-        float[] quarZ = {0, -0.707f, -0.707f, -0.5f, 0, -1, -0.5f};
-        float[] quarW = {0, 0.707f, 0.707f, 0.5f, 0.707f, 0, 0.5f};
+    private void gotoQR(){
+        p = P[16];
+        q = quaternion[7];
 
 
-        // T1(?) = P7 + Q5 (small)
-        // T2 = P1 + Q3
-        // T3(?) = P2 (crash)
-        // T4 = P3 + Q5
-        // T5 = P4 + Q6 (not in middle)
-        // T6 = P5 + Q0 (opposite)
-        // QRcode = P6 + Q3(left) || Q4(opposite)
+        api.moveTo(p, q, true);
+        Log.i(TAG, "arrive QR z");
+
+        p = P[7];
+        api.moveTo(p, q, true);
+        Log.i(TAG, "arrive QR");
+        api.flashlightControlFront(0.05f);
+        api.saveMatImage(api.getMatNavCam(), photo_name(103));
+        QRmes = scanQRcode();
 
 
+        p = P[16];
+        api.moveTo(p, q, true);
+        Log.i(TAG, "back to QR z");
+    }
 
-
-        q = quaternion[0];
-        p = P[0];
-
-//        api.moveTo(P[9], q, true);
-//        Log.i(TAG, "arrive start z");
-//
-//        // QRcode
-//        p = P[16];
-//        q = quaternion[7];
-//
-//
-//        api.moveTo(p, q, true);
-//        Log.i(TAG, "arrive QR z");
-//
-//        p = P[7];
-//        api.moveTo(p, q, true);
-//        Log.i(TAG, "arrive QR");
-//        api.flashlightControlFront(0.05f);
-//        api.saveMatImage(api.getMatNavCam(), photo_name(103));
-//        String mes = scanQRcode();
-//
-//
-//        p = P[16];
-//        api.moveTo(p, q, true);
-//        Log.i(TAG, "back to QR z");
-
-
-
-
+    private void gotoGoal(){
         api.notifyGoingToGoal();
         p = P[13];
         api.moveTo(p, q, true);
-        Log.i(TAG, "arrivez " + Integer.toString(8));
+        Log.i(TAG, "arrive goal z ");
 
 
         p = P[8];
         api.moveTo(p, q, true);
         Log.i(TAG, "arrive goal");
-        // api.reportMissionCompletion(mes);
+        api.reportMissionCompletion(QRmes);
 
+    }
+
+
+    @Override
+    protected void runPlan1(){
+        api.startMission();
+        //Astrobee 1 ft cube  = 0.3048 meter per side, half approx = 0.16 m, diagonally half length = 0.22 m
+        //the below 7 arrays constitute the position of P1-1 to P2-3
+
+        gotoStart();
+        gotoTarget(1);
+        gotoQR();
+        gotoGoal();
 
         Log.i(TAG, "mission complete");
-
-
-
     }
 
     @Override
