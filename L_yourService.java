@@ -152,10 +152,10 @@ public class YourService extends KiboRpcService {
         Quaternion q;
         // T1 :
         // P = 1
-        // Q = (0, 0, -0.707f, 0.707f)
+        // Q = ()
 
         p = P[1 + 7];
-        q = quaternion[0];
+        q = quaternion[0];// new Quaternion(0,-1,0,0);
 
 
         api.moveTo(p, q, true);
@@ -271,7 +271,7 @@ public class YourService extends KiboRpcService {
 //        show_point_log(p);
 //        Log.i(TAG, "arrive T3 z");
 //
-//        p = new Point(10.709, -7.706, 4.487);
+//        p = new Point(10.71, -7.75, 4.48);
 //        api.moveTo(p, q, true);
 //        show_point_log(p);
 //        Log.i(TAG, "arrive T3");
