@@ -110,7 +110,7 @@ public class YourService extends KiboRpcService {
         Point point = new Point(10.4f, -10, 4.4f);
         Point pointz = new Point(10.4f, -10, 5.16f);
         Point[] P = {
-                new Point(posX[1], posY[1], posZ[1]),
+                new Point(11.2746f , -9.92284f , 5.2988f),
                 new Point(posX[2], posY[2], posZ[2]),
                 new Point(posX[3], posY[3], posZ[3]),
                 new Point(posX[4], posY[4], posZ[4]),
@@ -129,7 +129,7 @@ public class YourService extends KiboRpcService {
         };
 
         Quaternion[] quaternion = {
-                new Quaternion(quarX[0], quarY[0], quarZ[0], quarW[0]),
+                new Quaternion(0, 0, -0.707f, 0.707f),
                 new Quaternion(quarX[1], quarY[1], quarZ[1], quarW[1]),
                 new Quaternion(quarX[2], quarY[2], quarZ[2], quarW[2]),
                 new Quaternion(quarX[3], quarY[3], quarZ[3], quarW[3]),
@@ -148,65 +148,96 @@ public class YourService extends KiboRpcService {
 
         Log.i(TAG, "arrive start z");
 
-
-        // T2 :
+        Point p;
+        Quaternion q;
+        // T1 :
         // P = 1
-        // Q = 3
-        // T2 = P1 + Q3
-        Point p = P[1 + 7];
-        Quaternion q = quaternion[3];// new Quaternion(0,-1,0,0);
+        // Q = ()
+
+        p = P[1 + 7];
+        q = quaternion[0];// new Quaternion(0,-1,0,0);
+
 
         api.moveTo(p, q, true);
         show_point_log(p);
-        Log.i(TAG, "arrive T2 z");
+        Log.i(TAG, "arrive T1 z");
 
-        p = new Point(10.463, -9.173, posZ[2]);
+        p = P[0];
         api.moveTo(p, q, true);
         show_point_log(p);
-        Log.i(TAG, "arrive T2");
+
+
+        Log.i(TAG, "arrive T1");
         api.laserControl(true);
         api.flashlightControlFront(0.05f);
 
         // take active target snapshots
-        api.takeTargetSnapshot(2);
+        api.takeTargetSnapshot(1);
 
-        api.laserControl(false);
-        api.saveMatImage(api.getMatNavCam(), photo_name(2));
+        api.saveMatImage(api.getMatNavCam(), photo_name(1));
 
-
-        p = new Point(p.getX(), p.getY(), 5.17);
+        p = P[1 + 7];
         api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "back to T2 z");
+        Log.i(TAG, "back to T1 z");
+
+//        // T2 :
+//        // P = 1
+//        // Q = 3
+//        // T2 = P1 + Q3
+//        p = P[1 + 7];
+//        q = quaternion[3];// new Quaternion(0,-1,0,0);
+//
+//        api.moveTo(p, q, true);
+//        show_point_log(p);
+//        Log.i(TAG, "arrive T2 z");
+//
+//        p = new Point(10.463, -9.173, posZ[2]);
+//        api.moveTo(p, q, true);
+//        show_point_log(p);
+//        Log.i(TAG, "arrive T2");
+//        api.laserControl(true);
+//        api.flashlightControlFront(0.05f);
+//
+//        // take active target snapshots
+//        api.takeTargetSnapshot(2);
+//
+//        api.laserControl(false);
+//        api.saveMatImage(api.getMatNavCam(), photo_name(2));
+//
+//
+//        p = new Point(p.getX(), p.getY(), 5.17);
+//        api.moveTo(p, q, true);
+//        show_point_log(p);
+//        Log.i(TAG, "back to T2 z");
 
         // T6 :
         // P = 6
         // Q = (0, 0, 0, 1)
-        p = P[6 + 7];
-        q = new Quaternion(0, 0, 0, 1);// new Quaternion(1,0,0,0);
-
-
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T6 z");
-
-        p = new Point(11.307, -9.018, 4.931);
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "arrive T6");
-        api.laserControl(true);
-        api.flashlightControlFront(0.05f);
-
-        // take active target snapshots
-        api.takeTargetSnapshot(6);
-
-        api.saveMatImage(api.getMatNavCam(), photo_name(6));
-
-
-        p = P[6 + 7];
-        api.moveTo(p, q, true);
-        show_point_log(p);
-        Log.i(TAG, "back to T6 z");
+//        p = P[6 + 7];
+//        q = new Quaternion(0, 0, 0, 1);// new Quaternion(1,0,0,0);
+//
+//
+//        api.moveTo(p, q, true);
+//        show_point_log(p);
+//        Log.i(TAG, "arrive T6 z");
+//
+//        p = new Point(11.307, -9.018, 4.931);
+//        api.moveTo(p, q, true);
+//        show_point_log(p);
+//        Log.i(TAG, "arrive T6");
+//        api.laserControl(true);
+//        api.flashlightControlFront(0.05f);
+//
+//        // take active target snapshots
+//        api.takeTargetSnapshot(6);
+//
+//        api.saveMatImage(api.getMatNavCam(), photo_name(6));
+//
+//
+//        p = P[6 + 7];
+//        api.moveTo(p, q, true);
+//        show_point_log(p);
+//        Log.i(TAG, "back to T6 z");
 
         // QRcode :
         // P = 7
@@ -217,7 +248,6 @@ public class YourService extends KiboRpcService {
 
         api.moveTo(p, q, true);
         show_point_log(p);
-        Log.i(TAG, "arrive savepoint QR z");
 
         p = new Point(11.453, -8.552, 4.48);
         api.moveTo(p, q, true);
@@ -230,19 +260,18 @@ public class YourService extends KiboRpcService {
         api.moveTo(p, q, true);
         show_point_log(p);
         Log.i(TAG, "back to QR z");
-//
-//        // T3 :
-//        // P = 7(z-axis = 5.30) -> 3
-//        // Q = (0, 0.707f, 0, 0.707f)
+
+        // T3 :
+        // P = 7(z-axis = 5.30) -> 3
+        // Q = (0, 0.707f, 0, 0.707f)
 //        p = P[6 + 7];
-//        // q = quaternion[5];// new Quaternion(0,-1,0,0);
 //        q = new Quaternion(0, 0.707f, 0, 0.707f);
 //
 //        api.moveTo(p, q, true);
 //        show_point_log(p);
 //        Log.i(TAG, "arrive T3 z");
 //
-//        p = P[2];
+//        p = new Point(10.709, -7.706, 4.487);
 //        api.moveTo(p, q, true);
 //        show_point_log(p);
 //        Log.i(TAG, "arrive T3");
@@ -260,38 +289,48 @@ public class YourService extends KiboRpcService {
 //        show_point_log(p);
 //        Log.i(TAG, "back to T3 z");
 
+
+
         // T5 :
         // P = 4 + ( -0.35, 0, 0 )
         // Q = 6 (not in middle)
-//        p = P[4 + 7];
-//        q = quaternion[6];// new Quaternion(0,-1,0,0);
-//
-//
-//        api.moveTo(p, q, true);
-//        show_point_log(p);
-//        Log.i(TAG, "arrive T5 z");
-//
-//        p = new Point(11.18, -8.009, 5.317);
-//        api.moveTo(p, q, true);
-//        show_point_log(p);
-//
-//
-//        Log.i(TAG, "arrive T5");
-//        api.laserControl(true);
-//        api.flashlightControlFront(0.05f);
-//
-//        // take active target snapshots
-//        api.takeTargetSnapshot(5);
-//
-//        api.saveMatImage(api.getMatNavCam(), photo_name(5));
-//
-//        p = P[6 + 7];
-//        api.moveTo(p, q, true);
-//        Log.i(TAG, "back to T5 z");
+        p = P[6 + 7];
+        q = quaternion[6];// new Quaternion(0,-1,0,0);
+
+
+        api.moveTo(p, q, true);
+        show_point_log(p);
+        Log.i(TAG, "arrive T5 z");
+
+        p = new Point(11.037, -7.902, 5.312);
+        api.moveTo(p, q, true);
+        show_point_log(p);
+
+
+        Log.i(TAG, "arrive T5");
+        api.laserControl(true);
+        api.flashlightControlFront(0.05f);
+
+        // take active target snapshots
+        api.takeTargetSnapshot(5);
+
+        api.saveMatImage(api.getMatNavCam(), photo_name(5));
+
+        p = P[6 + 7];
+        api.moveTo(p, q, true);
+        Log.i(TAG, "back to T5 z");
 
         // T4 :
         // P = 4
         // Q = 5
+
+        p = P[6 + 7];
+        q = new Quaternion(0.707f, 0, -0.707f, 0);
+        // q = quaternion[4];// new Quaternion(0,-1,0,0);
+
+        api.moveTo(p, q, true);
+
+
         p = P[3 + 7];
         q = quaternion[5];// new Quaternion(0,0,-1,0);
 
@@ -316,6 +355,7 @@ public class YourService extends KiboRpcService {
         api.moveTo(p, q, true);
         show_point_log(p);
         Log.i(TAG, "back to T4 z");
+
 
         api.notifyGoingToGoal();
         api.moveTo(P[15], test, true);
