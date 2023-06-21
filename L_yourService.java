@@ -152,10 +152,10 @@ public class YourService extends KiboRpcService {
         Quaternion q;
         // T1 :
         // P = 1
-        // Q = ()
+        // Q = (0, 0, -0.707f, 0.707f)
 
         p = P[1 + 7];
-        q = quaternion[0];// new Quaternion(0,-1,0,0);
+        q = quaternion[0];
 
 
         api.moveTo(p, q, true);
