@@ -102,7 +102,7 @@ public class YourService extends KiboRpcService {
         api.moveTo(new Point(10.4f, -10, 5.17f));
         
 
-        while(remain.get(1) > 90000) {
+        while(remain.get(1) > 90000) {  // T2 to goal : 34080ms
             active = api.getActiveTargets();
             int length = active.size();
             
