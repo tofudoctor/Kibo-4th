@@ -30,7 +30,7 @@ public class YourService extends KiboRpcService {
     private String QRmes;
     private Point[] P = {
             new Point(10.4f    , -10       , 4.4f),       // start(0)
-            new Point(11.2746f , -9.92284f , 5.2988f),    //v
+            new Point(11.3046f , -9.92284f , 5.2988f),    //v
             new Point(10.612f  , -9.0709f  , 4.48f),      //v
             new Point(10.71f   , -7.7f     , 4.48f),      //v
             new Point(10.51f   , -6.7185f  , 5.1804f),    //v
@@ -39,7 +39,7 @@ public class YourService extends KiboRpcService {
             new Point(11.369f  , -8.5518   , 4.7818f),    // QR code(7)
             new Point(11.143f  , -6.7607f  , 4.48f),      // goal(8)
             new Point(10.4f    , -10       , down),         // startz(9 = 0 + 9)
-            new Point(11.2746f , -9.92284f , down),
+            new Point(11.3046f , -9.92284f , down),
             new Point(10.612f  , -9.0709f  , down),
             new Point(10.71f   , -7.7f     , down),
             new Point(10.51f   , -6.7185f  , down),
@@ -117,15 +117,18 @@ public class YourService extends KiboRpcService {
 
         MatOfPoint point = new MatOfPoint();
         QRCodeDetector detector = new QRCodeDetector();
+        Mat picture = api.getMatNavCam();
+        Mat subpicture = picture.submat(400, 600, 550, 750);
+        api.saveMatImage(subpicture, photo_name(1000000));
 
-        String data = detector.detectAndDecode(api.getMatNavCam(), point);
+        String data = detector.detectAndDecode(subpicture, point);
         return map.get(data);
     }
 
     private void gotoStart(){
         p = P[9];
         q = quaternion[0];
-        api.moveTo(p, q, true);
+        api.moveTo(p, q, false);
         Log.i(TAG, "arrive start z");
     }
 
@@ -134,49 +137,55 @@ public class YourService extends KiboRpcService {
 
         if(x <= 2){
             p = P[11];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
             Log.i(TAG, "arrivez " + Integer.toString(x));
 
 
             p = P[x];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(x);
             api.saveMatImage(api.getMatNavCam(), photo_name(x));
             Log.i(TAG, "arrive " + Integer.toString(x));
 
 
             p = P[11];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
             Log.i(TAG, "arrivez2 " + Integer.toString(x));
         }
         else if(x == 4){
             p = P[13];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
             Log.i(TAG, "arrivez " + Integer.toString(x));
 
 
             p = P[x];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(x);
             api.saveMatImage(api.getMatNavCam(), photo_name(x));
             Log.i(TAG, "arrive " + Integer.toString(x));
 
 
             p = P[13];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
             Log.i(TAG, "arrivez2 " + Integer.toString(x));
         }
         else{
             p = P[16];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
             Log.i(TAG, "arrivez " + Integer.toString(x));
 
             p = P[x];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(x);
             api.saveMatImage(api.getMatNavCam(), photo_name(x));
             Log.i(TAG, "arrive " + Integer.toString(x));
 
 
             p = P[16];
-            api.moveTo(p, q, true);
+            api.moveTo(p, q, false);
             Log.i(TAG, "arrivez2 " + Integer.toString(x));
         }
     }
@@ -186,11 +195,11 @@ public class YourService extends KiboRpcService {
         q = quaternion[7];
 
 
-        api.moveTo(p, q, true);
+        api.moveTo(p, q, false);
         Log.i(TAG, "arrive QR z");
 
         p = P[7];
-        api.moveTo(p, q, true);
+        api.moveTo(p, q, false);
         Log.i(TAG, "arrive QR");
         api.flashlightControlFront(0.05f);
         api.saveMatImage(api.getMatNavCam(), photo_name(103));
@@ -198,19 +207,19 @@ public class YourService extends KiboRpcService {
 
 
         p = P[16];
-        api.moveTo(p, q, true);
+        api.moveTo(p, q, false);
         Log.i(TAG, "back to QR z");
     }
 
     private void gotoGoal(){
         api.notifyGoingToGoal();
         p = P[13];
-        api.moveTo(p, q, true);
+        api.moveTo(p, q, false);
         Log.i(TAG, "arrive goal z ");
 
 
         p = P[8];
-        api.moveTo(p, q, true);
+        api.moveTo(p, q, false);
         Log.i(TAG, "arrive goal");
         api.reportMissionCompletion(QRmes);
 
@@ -220,15 +229,20 @@ public class YourService extends KiboRpcService {
     @Override
     protected void runPlan1(){
         api.startMission();
-        //Astrobee 1 ft cube  = 0.3048 meter per side, half approx = 0.16 m, diagonally half length = 0.22 m
-        //the below 7 arrays constitute the position of P1-1 to P2-3
+
 
         gotoStart();
-        gotoTarget(1);
-        gotoQR();
-        gotoGoal();
 
-        Log.i(TAG, "mission complete");
+        List<Integer> targets = api.getActiveTargets();
+
+
+        int curtarget = 4;
+        gotoTarget(curtarget);
+        gotoQR();
+
+        List<Long> timeRemaining = api.getTimeRemaining();
+
+        gotoGoal();
     }
 
     @Override
