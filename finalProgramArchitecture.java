@@ -68,23 +68,24 @@ public class YourService extends KiboRpcService {
         MatOfPoint point = new MatOfPoint();
         QRCodeDetector detector = new QRCodeDetector();
         Mat picture = api.getMatNavCam();
-        Mat subpicture = picture.submat(400, 650, 550, 800);
-        api.saveMatImage(subpicture, "cropped.png");
+        //Mat subpicture = picture.submat(400, 650, 550, 800);
 
-        String data = detector.detectAndDecode(subpicture, point);
+        String data = detector.detectAndDecode(picture, point);
         return map.get(data);
     }
 
     private  String gotoQRcode() {
+        Long start = api.getTimeRemaining().get(1);
         Quaternion q = quaternion[6];
         api.moveTo(P[9], q, true);
         api.moveTo(P[6], q, true);
 
         api.flashlightControlFront(0.05f);
 
-        api.saveMatImage(api.getMatNavCam(), "QRcode.png");
         String res = scanQRcode();
         api.moveTo(P[9], q, true);
+
+        Log.i(TAG, "scan QRcode time cost: " + (start - api.getTimeRemaining().get(1)));
         return res;
     }
 
@@ -131,7 +132,8 @@ public class YourService extends KiboRpcService {
 
         String endMes = "";
         boolean scanned = false;
-        int area = 2;
+        boolean moveArea = false;
+        int area = 2, prevArea = 2;
         // 1 for target 1, 2
         // 2 for target 3, 5, 6
         // 3 for target 4
@@ -143,27 +145,27 @@ public class YourService extends KiboRpcService {
         int target;
         int length = 0;
         Long phaseRemainTime = Long.valueOf(0);
+        Long startShooting, startMoveArea = new Long(0);
         Quaternion q = new Quaternion(0, 0, 0, 1);
         api.moveTo(p, q, true);
 
-        while(api.getTimeRemaining().get(1) > 60000 && shootTime < 4) {  // T2 to goal : 34080ms
-            active = api.getActiveTargets();
-            target = active.get(0);
-            length = active.size();
+        while(api.getTimeRemaining().get(1) >= 60000 && shootTime < 4) {  // T2 to goal : 34080ms
+
             Long minus = phaseRemainTime - api.getTimeRemaining().get(0);
             Log.i(TAG, "phaseRemainTime: " + phaseRemainTime);
             Log.i(TAG, "nowPhaseRemainTime: " + api.getTimeRemaining().get(0));
             Log.i(TAG, "minus: " + minus.toString());
 
-            if (minus > 0 ) {
+            if (minus >= 0 ) {
                 Log.i(TAG, "phaseRemainTime: " + phaseRemainTime);
                 Log.i(TAG, "nowPhaseRemainTime: " + api.getTimeRemaining().get(0));
                 continue;
             }
 
+            active = api.getActiveTargets();
+            target = active.get(0);
+            length = active.size();
 
-
-            phaseRemainTime = Long.valueOf(0);
             Log.i(TAG, "now target: " + active);
             // int first = active.get(0);
 
@@ -183,6 +185,7 @@ public class YourService extends KiboRpcService {
             }
 
             Log.i(TAG, "shooting target: " + target);
+
 //            if (length == 2) {
 //                int first = active.get(0);
 //                int second = active.get(1);
@@ -208,22 +211,37 @@ public class YourService extends KiboRpcService {
                 // if (phase == 3) break;
 
                 p = getPoint(9);
+                moveArea = true;
+                prevArea = area;
                 area = 3;
+                startMoveArea = api.getTimeRemaining().get(1);
             }
             else if (target == 1 || target == 2 && area != 1) {
                 p = getPoint(8);
+                prevArea = area;
+                moveArea = true;
                 area = 1;
+                startMoveArea = api.getTimeRemaining().get(1);
             }
             else if ((target == 3 || target == 5 || target == 6) && area != 2) {
 //                if (target == 5 && phase == 3) break;
 
+                moveArea = true;
                 p = getPoint(10);
+                prevArea = area;
                 area = 2;
+                startMoveArea = api.getTimeRemaining().get(1);
             }
 
             api.moveTo(p, q, true);
+            if (moveArea) {
+                Log.i(TAG, "move from area " + prevArea + " to area " + area + " time cost: " + (startMoveArea - api.getTimeRemaining().get(1)));
+                moveArea = false;
+            }
 
-                Log.i(TAG, "shooting target: " + target);
+            startShooting = api.getTimeRemaining().get(1);
+
+
 
                 p = getPoint(target);
                 q = getQuaternion(target);
@@ -231,8 +249,9 @@ public class YourService extends KiboRpcService {
                 api.laserControl(true);
                 Log.i(TAG, "target remain time :" + api.getTimeRemaining().get(0));
                 Log.i(TAG, "activating targets :" + api.getActiveTargets());
+                phaseRemainTime = api.getTimeRemaining().get(0);
                 api.takeTargetSnapshot(target);
-                api.saveMatImage(api.getMatNavCam(), shootTime + ".png");
+//                api.saveMatImage(api.getMatNavCam(), shootTime + ".png");
                 shootTime++;
 
                 if (area == 1) {
@@ -307,13 +326,16 @@ public class YourService extends KiboRpcService {
 
                 }
 //                if (api.getTimeRemaining().get(1) <= 60000 || length == 2) break;
+            Log.i(TAG, "complete shoot target " + target + " and come back: " + (startShooting - api.getTimeRemaining().get(1)));
+
+
             if (length == 2 && (! scanned) && phase != 3) {
                 scanned = true;
                 endMes = gotoQRcode();
                 area = 2;
             }
 
-            phaseRemainTime = api.getTimeRemaining().get(0);
+
             phase++;
 
         }
