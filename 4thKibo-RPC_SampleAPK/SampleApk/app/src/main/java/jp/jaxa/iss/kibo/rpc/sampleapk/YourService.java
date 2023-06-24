@@ -30,21 +30,21 @@ public class YourService extends KiboRpcService {
     private String QRmes;
     private Point[] P = {
             new Point(10.4f    , -10       , 4.4f),       // start(0)
-            new Point(11.3046f , -9.92284f , 5.2988f),    //v
-            new Point(10.612f  , -9.0709f  , 4.48f),      //v
-            new Point(10.71f   , -7.7f     , 4.48f),      //v
-            new Point(10.51f   , -6.7185f  , 5.1804f),    //v
-            new Point(11.114f  , -7.9756f  , 5.3393f),    //v
-            new Point(11.355f  , -8.9929f  , 4.7818f),    //v
-            new Point(11.369f  , -8.5518   , 4.7818f),    // QR code(7)
+            new Point(11.225f  , -9.923f   , 5.469f),    //v
+            new Point(10.463f  , -9.173f  , 4.48f),      //v
+            new Point(10.71f   , -7.75f     , 4.48f),      //v
+            new Point(10.485f   , -6.615f  , 5.17f),    //v
+            new Point(11.037f  , -7.902f  , 5.312f),    //v
+            new Point(11.307f  , -9.038f  , 4.931f),    //v
+            new Point(11.369f  , -8.5518   , 5),//4.7818f),    // QR code(7)
             new Point(11.143f  , -6.7607f  , 4.48f),      // goal(8)
             new Point(10.4f    , -10       , down),         // startz(9 = 0 + 9)
-            new Point(11.3046f , -9.92284f , down),
-            new Point(10.612f  , -9.0709f  , down),
-            new Point(10.71f   , -7.7f     , down),
-            new Point(10.51f   , -6.7185f  , down),
-            new Point(11.114f  , -7.9756f  , down),
-            new Point(11.355f  , -8.9929f  , down),
+            new Point(11.225f , -9.923f , down),
+            new Point(10.463f  , -9.173f  , down),
+            new Point(10.71f   , -7.75f     , down),
+            new Point(10.485f   , -6.615f  , down),
+            new Point(11.037f  , -7.902f  , down),
+            new Point(11.307f  , -9.038f  , down),
             new Point(11.369f  , -8.5518   , down),         // QR codez(16 = 7 + 9)
             new Point(11.143f  , -6.7607f  , down),         // goalz(17 = 8 + 9)
 
@@ -232,15 +232,28 @@ public class YourService extends KiboRpcService {
 
 
         gotoStart();
+        while(true){
+            List<Integer> targets = api.getActiveTargets();
 
-        List<Integer> targets = api.getActiveTargets();
+
+            for(int i = 0;i < targets.size();i++){
+                List<Long> ActivetimeRemaining = api.getTimeRemaining();
+                int cur_target = targets.get(i);
+                gotoTarget(cur_target);
+                Log.i(TAG, Long.toString(ActivetimeRemaining.get(0)));
+
+            }
+            List<Long> MissiontimeRemaining = api.getTimeRemaining();
+            Log.i(TAG, Long.toString(MissiontimeRemaining.get(1)));
+            if (MissiontimeRemaining.get(1) < 60000){
+                break;
+            }
+        }
 
 
-        int curtarget = 4;
-        gotoTarget(curtarget);
         gotoQR();
 
-        List<Long> timeRemaining = api.getTimeRemaining();
+
 
         gotoGoal();
     }
