@@ -4,61 +4,61 @@ import android.util.Log;
 
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
+import java.lang.annotation.Target;
+import java.sql.Time;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import gov.nasa.arc.astrobee.Result;
 import gov.nasa.arc.astrobee.android.gs.MessageType;
 import gov.nasa.arc.astrobee.types.Point;
 import gov.nasa.arc.astrobee.types.Quaternion;
+import tf2_msgs.LookupTransformAction;
 
+import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.QRCodeDetector;
+
+import static org.opencv.core.CvType.CV_8UC4;
 
 /**
  * Class meant to handle commands from the Ground Data System and execute them in Astrobee
  */
 
 public class YourService extends KiboRpcService {
-    private static final String TAG = "NeverCaresyoU";
+    private static final String TAG = "NCU";
 
-    int flag_obstacle = 0;//keeping track of each obstacle crossed
+    private static final Point[] P = {
+            new Point(11.225, -9.923, 5.469), // target 1
+            new Point(10.463, -9.173, 4.48), // target 2
+            new Point(10.71, -7.75, 4.48), // target 3
+            new Point(10.485, -6.615, 5.17), // target 4
+            new Point(11.037, -7.902, 5.312), // target 5
+            new Point(11.307, -9.038, 4.931), // target 6
+            new Point(11.453, -8.552, 5), // QRcode
+            new Point(10.463, -9.173, 5.25f), // mid point (1, 2)
+            new Point(10.51, -6.7185, 5.25f), // mid point (4, goal)
+            new Point(11.453, -8.552, 5.25f), // mid point (3, 5, 6, QRcode)
+            new Point(11.143, -6.7607, 4.9654), // goal point
+            new Point(11.143, -6.7607, 5.25f), // goal point (z-axis = 5.30)
+    };
+
+    private static final Quaternion[] quaternion = {
+            new Quaternion(0, 0, -0.707f, 0.707f), // Target 1
+            new Quaternion(0.5f, 0.5f, -0.5f, 0.5f), // Target 2
+            new Quaternion(0, 0.707f, 0, 0.707f), // Target 3
+            new Quaternion(0, 0, -1, 0), // Target 4
+            new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f), // Target 5
+            new Quaternion(0, 0, 0, 1), // Target 6
+            new Quaternion(0.707f, 0, -0.707f, 0) // QRcode
+    };
 
     //Keep In Zone Co - ordinates
-
-    private double[][][] KIZ = {
-            {
-                    {10.3, 11.55}, {-10.2, -6}, {4.32, 5.57}
-            },
-            {
-                    {9.5, 10.5}, {-10.5, -9.6}, {4.02, 4.8}
-            }
-    };
-
-    //Keep Out Zone Co-ordinates
-    private double[][][] KOZ = {
-            {
-                    // 000    001        010       011
-                    {10.783, 11.071}, {-9.8899, -9.6929}, {4.8385, 5.0665}
-            },
-            {
-                    // 100    101         110       111
-                    {10.8652, 10.9628}, {-9.0734, -8.7314}, {4.3861, 4.6401}
-            },
-            {
-                    {10.185, 11.665}, {-8.3826, -8.2826}, {4.1475, 4.6725}
-            },
-            {
-                    {10.7955, 11.3525}, {-8.0635, -7.7305}, {5.1055, 5.1305}
-            },
-            {
-                    {10.563, 10.709}, {-7.1449, -6.8099}, {4.6544, 4.8164}
-            }
-
-    };
 
     private String scanQRcode() {
         Map<String, String> map = new HashMap<>();
@@ -69,68 +69,274 @@ public class YourService extends KiboRpcService {
         map.put("INTBALL", "LOOKING_FORWARD_TO_SEE_YOU");
         map.put("BLANK", "NO_PROBLEM");
 
+        if (!OpenCVLoader.initDebug()) {
+            Log.e(TAG, "init fail");
+            return "";
+        }
+
         MatOfPoint point = new MatOfPoint();
         QRCodeDetector detector = new QRCodeDetector();
+        Mat subpicture = api.getMatNavCam().submat(400, 600, 300, 700);
+        api.saveMatImage(subpicture, "cropped.png");
 
-        String data = detector.detectAndDecode(api.getMatNavCam(), point);
-        Log.i(TAG, "QRcode message" + map.get(data));
+        String data = detector.detectAndDecode(subpicture, point);
         return map.get(data);
+    }
+
+    private  String gotoQRcode() {
+        Long start = api.getTimeRemaining().get(1);
+
+        api.flashlightControlFront(0.05f);
+
+        String res = scanQRcode();
+
+        Log.i(TAG, "scan QRcode time cost: " + (start - api.getTimeRemaining().get(1)));
+        return res;
     }
 
     private Point getPoint(int num) {
         // go to shoot target (num)
-        return new Point(0, 0, 0);
+        return P[num - 1];
     }
 
     private Quaternion getQuaternion(int num) {
         // give the quaternion that astrobee can face the target (num)
-        return new Quaternion(0, 0, 0, 0);
+        return quaternion[num - 1];
     }
 
     private void moveToGoal(String endMes) {
         // move to goal and report mission completion
+        Quaternion q = new Quaternion(0, 0, 0, 1);
+
+        api.notifyGoingToGoal();
+        api.moveTo(P[11], q, true);
+        Log.i(TAG, "arrive goal z");
+        api.moveTo(P[10], q, true);
+        Log.i(TAG, "arrive goal");
+
+        api.reportMissionCompletion(endMes);
+        Log.i(TAG, "mission complete");
     }
 
     @Override
     protected void runPlan1(){
+        // score:
+        // 1 :30
+        // 2 :20
+        // 3 :40
+        // 4 :20
+        // 5 :30
+        // 6 :30
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(1, 30);
+        map.put(2, 20);
+        map.put(3, 40);
+        map.put(4, 20);
+        map.put(5, 30);
+        map.put(6, 30);
+
         String endMes = "";
-        boolean scanned = false;
-        List<Long> remain = new LinkedList<>();
+        boolean moveArea = false;
+        int area = 2, prevArea = 2;
+        // 1 for target 1, 2
+        // 2 for target 3, 5, 6
+        // 3 for target 4
         List<Integer> active = new LinkedList<>();
         api.startMission();
-        remain = api.getTimeRemaining();
-        api.moveTo(new Point(10.4f, -10, 5.17f));
-        
+        int phase = 1;
+        int shootTime = 1;
+        Point p = P[6];
+        int target;
+        int length = 0;
+        Long phaseRemainTime = Long.valueOf(0);
+        Long startShooting, startMoveArea = new Long(0);
+        Quaternion q = quaternion[6];
+        api.moveTo(p, q, true);
+        endMes = gotoQRcode();
 
-        while(remain.get(1) > 90000) {  // T2 to goal : 34080ms
-            active = api.getActiveTargets();
-            int length = active.size();
-            
-            if ((! scanned) && length == 1) {
-                scanned = true;
-                endMes = scanQRcode();
+        while(api.getTimeRemaining().get(1) >= 60000 && shootTime < 4) {  // T2 to goal : 34080ms
+
+            Long minus = phaseRemainTime - api.getTimeRemaining().get(0);
+            Log.i(TAG, "phaseRemainTime: " + phaseRemainTime);
+            Log.i(TAG, "nowPhaseRemainTime: " + api.getTimeRemaining().get(0));
+            Log.i(TAG, "minus: " + minus.toString());
+
+            if (minus >= 0 ) {
+                Log.i(TAG, "phaseRemainTime: " + phaseRemainTime);
+                Log.i(TAG, "nowPhaseRemainTime: " + api.getTimeRemaining().get(0));
+                continue;
             }
 
-            for (int i = 0 ; i < length && remain.get(0) > 60000 && remain.get(1) > 90000 ; i++) { 
-                p = getPoint(i);
-                first = new Point(p.getX(), p.getY(), 5.17);
-                q = getQuaternion(i);
-                api.moveTo(first, q, true);
+            active = api.getActiveTargets();
+            target = active.get(0);
+            length = active.size();
+
+            Log.i(TAG, "now target: " + active);
+            // int first = active.get(0);
+
+            if (length == 2) {
+                if (active.get(0) == 4) {
+                    target = active.get(1);
+                }
+                else if (active.get(1) == 4) {
+                    target = active.get(0);
+                }
+                else target = map.get(active.get(0)) > map.get(active.get(1)) ? active.get(0) : active.get(1);
+            }
+
+            Log.i(TAG, "shooting target: " + target);
+
+//            if (length == 2) {
+//                int first = active.get(0);
+//                int second = active.get(1);
+//
+//                if (area == 1 && ((second == 1 || second == 2) || first == 4)) {
+//                    active.clear();
+//                    active.add(second);
+//                    active.add(first);
+//                }
+//                else if (area == 2 && ((second == 3 || second == 5 || second == 6) || first == 4)) {
+//                    active.clear();
+//                    active.add(second);
+//                    active.add(first);
+//                }
+//                else if (area == 3 && second == 4) {
+//                    active.clear();
+//                    active.add(second);
+//                    active.add(first);
+//                }
+//            }
+
+            if (target == 4 && area != 3) {
+                // if (phase == 3) break;
+
+                p = getPoint(9);
+                moveArea = true;
+                prevArea = area;
+                area = 3;
+                startMoveArea = api.getTimeRemaining().get(1);
+            }
+            else if (target == 1 || target == 2 && area != 1) {
+                p = getPoint(8);
+                prevArea = area;
+                moveArea = true;
+                area = 1;
+                startMoveArea = api.getTimeRemaining().get(1);
+            }
+            else if ((target == 3 || target == 5 || target == 6) && area != 2) {
+//                if (target == 5 && phase == 3) break;
+
+                moveArea = true;
+                p = getPoint(10);
+                prevArea = area;
+                area = 2;
+                startMoveArea = api.getTimeRemaining().get(1);
+            }
+
+
+            startShooting = api.getTimeRemaining().get(1);
+
+
+            if (moveArea) {
+                api.moveTo(p, q, true);
+                Log.i(TAG, "move from area " + prevArea + " to area " + area + " time cost: " + (startMoveArea - api.getTimeRemaining().get(1)));
+                moveArea = false;
+            }
+
+
+
+
+
+                p = getPoint(target);
+                q = getQuaternion(target);
                 api.moveTo(p, q, true);
                 api.laserControl(true);
-                api.takeTargetSnapshot(i);
-                remain = api.getTimeRemaining();
-                api.moveTo(first, q, true);
-            }
+                Log.i(TAG, "target remain time :" + api.getTimeRemaining().get(0));
+                Log.i(TAG, "activating targets :" + api.getActiveTargets());
+                phaseRemainTime = api.getTimeRemaining().get(0);
+                api.takeTargetSnapshot(target);
+//                api.saveMatImage(api.getMatNavCam(), shootTime + ".png");
+                shootTime++;
 
-            if (remain.get(1) > 90000) break;
+                if (area == 1) {
 
-            remain = api.getTimeRemaining();
+                    p = getPoint(8);
+                    api.moveTo(p, q, true);
+                    Log.i(TAG, "back to 2 midpoint");
+
+
+//                    if (i + 1 != length) {
+//                        if (active.get(i + 1) == 4) {
+//                            p = getPoint(9);
+//                            api.moveTo(p, q, true);
+//                            area = 3;
+//                        }
+//                        else if (active.get(i + 1) == 3 || active.get(i + 1) == 5 || active.get(i + 1) == 6) {
+//                            p = getPoint(10);
+//                            api.moveTo(p, q, true);
+//                            area = 2;
+//                        }
+//                        else {
+//                            area = 1;
+//                        }
+//                    }
+
+                }
+                else if (area == 2) {
+                    p = getPoint(10);
+                    api.moveTo(p, q, true);
+                    Log.i(TAG, "back to 3, 5, 6 midpoint");
+                    area = 2;
+
+//                    if (i + 1 != length) {
+//                        if (active.get(i + 1) == 4) {
+//                            p = getPoint(9);
+//                            api.moveTo(p, q, true);
+//                            area = 3;
+//                        }
+//                        else if (active.get(i + 1) == 1 || active.get(i + 1) == 2) {
+//                            p = getPoint(8);
+//                            api.moveTo(p, q, true);
+//                            area = 1;
+//                        }
+//                        else {
+//                            area = 2;
+//                        }
+//                    }
+                }
+                else {
+                    p = getPoint(9);
+                    api.moveTo(p, q, true);
+                    Log.i(TAG, "back to 4 midpoint");
+
+//                    if (api.getTimeRemaining().get(1) >= 50000) {
+//                        if (i + 1 != length) {
+//                            if (active.get(i + 1) == 1 || active.get(i + 1) == 2) {
+//                                p = getPoint(8);
+//                                api.moveTo(p, q, true);
+//                                area = 1;
+//                            }
+//                            else if (active.get(i + 1) == 3 || active.get(i + 1) == 5 || active.get(i + 1) == 6) {
+//                                p = getPoint(10);
+//                                api.moveTo(p, q, true);
+//                                area = 2;
+//                            }
+//                            else {
+//                                area = 3;
+//                            }
+//                        }
+//                    }
+//                    else break;
+
+                }
+//                if (api.getTimeRemaining().get(1) <= 60000 || length == 2) break;
+            Log.i(TAG, "complete shoot target " + target + " and come back: " + (startShooting - api.getTimeRemaining().get(1)));
+
+            phase++;
+
         }
 
-        if (! scanned) {
-            endMes = scanQRcode();
-        }
+        Log.i(TAG, "time remain to goal: " + api.getTimeRemaining().toString());
 
         moveToGoal(endMes);
     }
