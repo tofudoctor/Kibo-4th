@@ -18,9 +18,13 @@ import gov.nasa.arc.astrobee.types.Point;
 import gov.nasa.arc.astrobee.types.Quaternion;
 import tf2_msgs.LookupTransformAction;
 
+import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.QRCodeDetector;
+
+import static org.opencv.core.CvType.CV_8UC4;
 
 /**
  * Class meant to handle commands from the Ground Data System and execute them in Astrobee
@@ -36,7 +40,7 @@ public class YourService extends KiboRpcService {
             new Point(10.485, -6.615, 5.17), // target 4
             new Point(11.037, -7.902, 5.312), // target 5
             new Point(11.307, -9.038, 4.931), // target 6
-            new Point(11.453, -8.552, 4.48), // QRcode
+            new Point(11.453, -8.552, 5), // QRcode
             new Point(10.463, -9.173, 5.25f), // mid point (1, 2)
             new Point(10.51, -6.7185, 5.25f), // mid point (4, goal)
             new Point(11.453, -8.552, 5.25f), // mid point (3, 5, 6, QRcode)
@@ -65,25 +69,26 @@ public class YourService extends KiboRpcService {
         map.put("INTBALL", "LOOKING_FORWARD_TO_SEE_YOU");
         map.put("BLANK", "NO_PROBLEM");
 
+        if (!OpenCVLoader.initDebug()) {
+            Log.e(TAG, "init fail");
+            return "";
+        }
+
         MatOfPoint point = new MatOfPoint();
         QRCodeDetector detector = new QRCodeDetector();
-        Mat picture = api.getMatNavCam();
-        //Mat subpicture = picture.submat(400, 650, 550, 800);
+        Mat subpicture = api.getMatNavCam().submat(400, 600, 300, 700);
+        api.saveMatImage(subpicture, "cropped.png");
 
-        String data = detector.detectAndDecode(picture, point);
+        String data = detector.detectAndDecode(subpicture, point);
         return map.get(data);
     }
 
     private  String gotoQRcode() {
         Long start = api.getTimeRemaining().get(1);
-        Quaternion q = quaternion[6];
-        api.moveTo(P[9], q, true);
-        api.moveTo(P[6], q, true);
 
         api.flashlightControlFront(0.05f);
 
         String res = scanQRcode();
-        api.moveTo(P[9], q, true);
 
         Log.i(TAG, "scan QRcode time cost: " + (start - api.getTimeRemaining().get(1)));
         return res;
@@ -131,7 +136,6 @@ public class YourService extends KiboRpcService {
         map.put(6, 30);
 
         String endMes = "";
-        boolean scanned = false;
         boolean moveArea = false;
         int area = 2, prevArea = 2;
         // 1 for target 1, 2
@@ -141,13 +145,14 @@ public class YourService extends KiboRpcService {
         api.startMission();
         int phase = 1;
         int shootTime = 1;
-        Point p = P[9];
+        Point p = P[6];
         int target;
         int length = 0;
         Long phaseRemainTime = Long.valueOf(0);
         Long startShooting, startMoveArea = new Long(0);
-        Quaternion q = new Quaternion(0, 0, 0, 1);
+        Quaternion q = quaternion[6];
         api.moveTo(p, q, true);
+        endMes = gotoQRcode();
 
         while(api.getTimeRemaining().get(1) >= 60000 && shootTime < 4) {  // T2 to goal : 34080ms
 
@@ -177,11 +182,6 @@ public class YourService extends KiboRpcService {
                     target = active.get(0);
                 }
                 else target = map.get(active.get(0)) > map.get(active.get(1)) ? active.get(0) : active.get(1);
-            }
-
-            if ((! scanned) && target == 4 && phase == 3) {
-                scanned = true;
-                endMes = gotoQRcode();
             }
 
             Log.i(TAG, "shooting target: " + target);
@@ -233,13 +233,17 @@ public class YourService extends KiboRpcService {
                 startMoveArea = api.getTimeRemaining().get(1);
             }
 
-            api.moveTo(p, q, true);
+
+            startShooting = api.getTimeRemaining().get(1);
+
+
             if (moveArea) {
+                api.moveTo(p, q, true);
                 Log.i(TAG, "move from area " + prevArea + " to area " + area + " time cost: " + (startMoveArea - api.getTimeRemaining().get(1)));
                 moveArea = false;
             }
 
-            startShooting = api.getTimeRemaining().get(1);
+
 
 
 
@@ -327,14 +331,6 @@ public class YourService extends KiboRpcService {
                 }
 //                if (api.getTimeRemaining().get(1) <= 60000 || length == 2) break;
             Log.i(TAG, "complete shoot target " + target + " and come back: " + (startShooting - api.getTimeRemaining().get(1)));
-
-
-            if (length == 2 && (! scanned) && phase != 3) {
-                scanned = true;
-                endMes = gotoQRcode();
-                area = 2;
-            }
-
 
             phase++;
 
