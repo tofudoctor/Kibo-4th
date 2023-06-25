@@ -94,7 +94,7 @@ public class YourService extends KiboRpcService {
         MatOfPoint point = new MatOfPoint();
         QRCodeDetector detector = new QRCodeDetector();
         api.flashlightControlFront(0.05f);
-        Mat subpicture = api.getMatNavCam().submat(400, 650, 380, 720);
+        Mat subpicture = api.getMatNavCam().submat(400, 650, 350, 750);
         api.saveMatImage(subpicture, photo_name(1000000));
 
         String data = detector.detectAndDecode(subpicture, point);
@@ -109,7 +109,12 @@ public class YourService extends KiboRpcService {
 
     private boolean fastmove(int pre, int cur){
         q = quaternion[cur];
-        if((pre == 1 && cur == 4) || (pre == 4 && cur == 1) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+        Long a = api.getTimeRemaining().get(0);
+        Long b = api.getTimeRemaining().get(1);
+//        a = a - 1000L;
+//        b = b - 1000L;
+
+        if((pre == 1 && cur == 4) || (pre == 4 && cur == 1) && a >= 45000 && b >= 45000){
             p = P[cur];
             api.moveTo(p, q, false);
             api.laserControl(true);
@@ -118,7 +123,11 @@ public class YourService extends KiboRpcService {
             Log.i(TAG, "arrive " + Integer.toString(cur));
             return true;
         }
-        else if((pre == 1 && cur == 5) || (pre == 5 && cur == 1) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+        else if(a < 45000 && b < 45000){
+            return true;
+        }
+
+        if((pre == 1 && cur == 5) || (pre == 5 && cur == 1) && a >= 40000 && b >= 40000){
             p = P[cur];
             api.moveTo(p, q, false);
             api.laserControl(true);
@@ -127,7 +136,11 @@ public class YourService extends KiboRpcService {
             Log.i(TAG, "arrive " + Integer.toString(cur));
             return true;
         }
-        else if((pre == 1 && cur == 6) || (pre == 6 && cur == 1) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+        else if(a < 40000 && b < 40000){
+            return true;
+        }
+
+        if((pre == 1 && cur == 6) || (pre == 6 && cur == 1) && a >= 30000 && b >= 30000){
             p = P[cur];
             api.moveTo(p, q, false);
             api.laserControl(true);
@@ -136,7 +149,11 @@ public class YourService extends KiboRpcService {
             Log.i(TAG, "arrive " + Integer.toString(cur));
             return true;
         }
-        else if((pre == 2 && cur == 6) || (pre == 6 && cur == 2) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+        else if(a < 30000 && b < 30000){
+            return true;
+        }
+
+        if((pre == 2 && cur == 6) || (pre == 6 && cur == 2) && a >= 30000 && b >= 30000){
             p = P[cur];
             api.moveTo(p, q, false);
             api.laserControl(true);
@@ -145,7 +162,11 @@ public class YourService extends KiboRpcService {
             Log.i(TAG, "arrive " + Integer.toString(cur));
             return true;
         }
-        else if((pre == 4 && cur == 5) || (pre == 5 && cur == 4) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+        else if(a < 30000 && b < 30000){
+            return true;
+        }
+
+        if((pre == 4 && cur == 5) || (pre == 5 && cur == 4) && a >= 30000 && b >= 30000){
             p = P[cur];
             api.moveTo(p, q, false);
             api.laserControl(true);
@@ -154,7 +175,11 @@ public class YourService extends KiboRpcService {
             Log.i(TAG, "arrive " + Integer.toString(cur));
             return true;
         }
-        else if((pre == 4 && cur == 6) || (pre == 6 && cur == 4) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+        else if(a < 30000 && b < 30000){
+            return true;
+        }
+
+        if((pre == 4 && cur == 6) || (pre == 6 && cur == 4) && a >= 40000 && b >= 40000){
             p = P[cur];
             api.moveTo(p, q, false);
             api.laserControl(true);
@@ -163,7 +188,11 @@ public class YourService extends KiboRpcService {
             Log.i(TAG, "arrive " + Integer.toString(cur));
             return true;
         }
-        else if((pre == 5 && cur == 6) || (pre == 6 && cur == 5) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+        else if(a < 40000 && b < 40000){
+            return true;
+        }
+
+        if((pre == 5 && cur == 6) || (pre == 6 && cur == 5) && a >= 30000 && b >= 30000){
             p = P[cur];
             api.moveTo(p, q, false);
             api.laserControl(true);
@@ -172,9 +201,10 @@ public class YourService extends KiboRpcService {
             Log.i(TAG, "arrive " + Integer.toString(cur));
             return true;
         }
-        else if(api.getTimeRemaining().get(0) < 40000 && api.getTimeRemaining().get(1) < 40000){
+        else if(a < 30000 && b < 30000){
             return true;
         }
+
         return false;
     }
 
@@ -190,13 +220,18 @@ public class YourService extends KiboRpcService {
 
     private boolean gotoTarget(int pre, int cur){ // T1 ~ T6
         if(fastmove(pre, cur)) return false;
-        if(!moveArea(pre, cur)) return false;
-        if(cur == 1 && api.getTimeRemaining().get(0) >= 25000 && api.getTimeRemaining().get(1) >= 25000) return false;
-        else if(cur == 2 && api.getTimeRemaining().get(0) >= 21000 && api.getTimeRemaining().get(1) >= 21000) return false;
-        else if(cur == 3 && api.getTimeRemaining().get(0) >= 27000 && api.getTimeRemaining().get(1) >= 27000) return false;
-        else if(cur == 4 && api.getTimeRemaining().get(0) >= 35000 && api.getTimeRemaining().get(1) >= 35000) return false;
-        else if(cur == 5 && api.getTimeRemaining().get(0) >= 21000 && api.getTimeRemaining().get(1) >= 21000) return false;
-        else if(cur == 6 && api.getTimeRemaining().get(0) >= 19000 && api.getTimeRemaining().get(1) >= 19000) return false;
+        if(moveArea(pre, cur)) return false;
+        Long a = api.getTimeRemaining().get(0);
+        Long b = api.getTimeRemaining().get(1);
+//        a = a - 1000L;
+//        b = b - 1000L;
+
+        if(cur == 1 && a >= 25000 && b >= 25000) return false;
+        else if(cur == 2 && a >= 21000 && b >= 21000) return false;
+        else if(cur == 3 && a >= 27000 && b >= 27000) return false;
+        else if(cur == 4 && a >= 35000 && b >= 35000) return false;
+        else if(cur == 5 && a >= 21000 && b >= 21000) return false;
+        else if(cur == 6 && a >= 19000 && b >= 19000) return false;
 
 
         q = quaternion[cur];
@@ -230,38 +265,40 @@ public class YourService extends KiboRpcService {
 
     private void goto_Goal(int pre){
         api.notifyGoingToGoal();
+        Long b = api.getTimeRemaining().get(1);
+//        b = b - 1000L;
 
-        if(api.getTimeRemaining().get(1) >= 39000 && pre == 1){
+        if(b >= 39000 && pre == 1){
             p = P[17];
             api.moveTo(p, q, false);
             Log.i(TAG, "arrive goal z ");
             api.reportMissionCompletion(QRmes);
         }
-        else if(api.getTimeRemaining().get(1) >= 35000 && pre == 2){
+        else if(b >= 35000 && pre == 2){
             p = P[17];
             api.moveTo(p, q, false);
             Log.i(TAG, "arrive goal z ");
             api.reportMissionCompletion(QRmes);
         }
-        else if(api.getTimeRemaining().get(1) >= 23000 && pre == 3){
+        else if(b >= 23000 && pre == 3){
             p = P[8];
             api.moveTo(p, q, false);
             Log.i(TAG, "arrive goal z ");
             api.reportMissionCompletion(QRmes);
         }
-        else if(api.getTimeRemaining().get(1) >= 22000 && pre == 4){
+        else if(b >= 22000 && pre == 4){
             p = P[8];
             api.moveTo(p, q, false);
             Log.i(TAG, "arrive goal z ");
             api.reportMissionCompletion(QRmes);
         }
-        else if(api.getTimeRemaining().get(1) >= 24000 && pre == 5){
+        else if(b >= 24000 && pre == 5){
             p = P[17];
             api.moveTo(p, q, false);
             Log.i(TAG, "arrive goal z ");
             api.reportMissionCompletion(QRmes);
         }
-        else if(api.getTimeRemaining().get(1) >= 60000 && pre == 6){
+        else if(b >= 60000 && pre == 6){
             moveArea(pre, pre);
             p = P[17];
             api.moveTo(p, q, false);
@@ -275,14 +312,18 @@ public class YourService extends KiboRpcService {
 
     private boolean moveArea(int pre, int cur){
         q = quaternion[cur];
+        Long a = api.getTimeRemaining().get(0);
+        Long b = api.getTimeRemaining().get(1);
+//        a = a - 1000L;
+//        b = b - 1000L;
 
                 ;
         if(pre <= 2 && cur <= 2){
             if(pre == 1){
-                if(cur == 2 && api.getTimeRemaining().get(0) >= 46000 && api.getTimeRemaining().get(1) >= 46000) return true;
+                if(cur == 2 && a >= 46000 && b >= 46000) return true;
             }
             else if(pre == 2){
-                if(cur == 1 && api.getTimeRemaining().get(0) >= 46000 && api.getTimeRemaining().get(1) >= 46000) return true;
+                if(cur == 1 && a >= 46000 && b >= 46000) return true;
             }
 
             p = P[11];
@@ -291,18 +332,18 @@ public class YourService extends KiboRpcService {
         }
         else if(pre > 2 && cur > 2){
             if(pre == 3){
-                if(cur == 4 && api.getTimeRemaining().get(0) >= 62000 && api.getTimeRemaining().get(1) >= 62000) return true;
-                else if(cur == 5 && api.getTimeRemaining().get(0) >= 48000 && api.getTimeRemaining().get(1) >= 48000) return true;
-                else if(cur == 6 && api.getTimeRemaining().get(0) >= 46000 && api.getTimeRemaining().get(1) >= 46000) return true;
+                if(cur == 4 && a >= 62000 && b >= 62000) return true;
+                else if(cur == 5 && a >= 48000 && b >= 48000) return true;
+                else if(cur == 6 && a >= 46000 && b >= 46000) return true;
             }
             else if(pre == 4){
-                if(cur == 3 && api.getTimeRemaining().get(0) >= 62000 && api.getTimeRemaining().get(1) >= 62000) return true;
+                if(cur == 3 && a >= 62000 && b >= 62000) return true;
             }
             else if(pre == 5){
-                if(cur == 3 && api.getTimeRemaining().get(0) >= 48000 && api.getTimeRemaining().get(1) >= 48000) return true;
+                if(cur == 3 && a >= 48000 && b >= 48000) return true;
             }
             else if(pre == 6){
-                if(cur == 3 && api.getTimeRemaining().get(0) >= 46000 && api.getTimeRemaining().get(1) >= 46000) return true;
+                if(cur == 3 && a >= 46000 && b >= 46000) return true;
             }
 
             p = P[16];
@@ -311,14 +352,13 @@ public class YourService extends KiboRpcService {
         }
         else if(pre <= 2 && cur > 2){
             if(pre == 1){
-                if(cur == 3 && api.getTimeRemaining().get(0) >= 76000 && api.getTimeRemaining().get(1) >= 76000) return true;
+                if(cur == 3 && a >= 76000 && b >= 76000) return true;
             }
             else if(pre == 2){
-                if(cur == 3 && api.getTimeRemaining().get(0) >= 72000 && api.getTimeRemaining().get(1) >= 72000) return true;
-                else if(cur == 4 && api.getTimeRemaining().get(0) >= 80000 && api.getTimeRemaining().get(1) >= 80000) return true;
-                else if(cur == 5 && api.getTimeRemaining().get(0) >= 66000 && api.getTimeRemaining().get(1) >= 66000) return true;
+                if(cur == 3 && a >= 72000 && b >= 72000) return true;
+                else if(cur == 4 && a >= 80000 && b >= 80000) return true;
+                else if(cur == 5 && a >= 66000 && b >= 66000) return true;
             }
-
 
 
             p = P[11];
@@ -331,14 +371,14 @@ public class YourService extends KiboRpcService {
         }
         else if(pre > 2 && cur <= 2) {
             if(pre == 3){
-                if(cur == 1 && api.getTimeRemaining().get(0) >= 76000 && api.getTimeRemaining().get(1) >= 76000) return true;
-                else if(cur == 2 && api.getTimeRemaining().get(0) >= 72000 && api.getTimeRemaining().get(1) >= 72000) return true;
+                if(cur == 1 && a >= 76000 && b >= 76000) return true;
+                else if(cur == 2 && a >= 72000 && b >= 72000) return true;
             }
             else if(pre == 4){
-                if(cur == 2 && api.getTimeRemaining().get(0) >= 80000 && api.getTimeRemaining().get(1) >= 80000) return true;
+                if(cur == 2 && a >= 80000 && b >= 80000) return true;
             }
             else if(pre == 5){
-                if(cur == 2 && api.getTimeRemaining().get(0) >= 66000 && api.getTimeRemaining().get(1) >= 66000) return true;
+                if(cur == 2 && a >= 66000 && b >= 66000) return true;
             }
 
 
@@ -351,6 +391,7 @@ public class YourService extends KiboRpcService {
             api.moveTo(p, q, false);
             Log.i(TAG, "arrive area 1");
         }
+
         return false;
     }
 
@@ -371,11 +412,8 @@ public class YourService extends KiboRpcService {
 
         while(true) {
             phase++;
-            MissiontimeRemaining = api.getTimeRemaining().get(1);
-            Log.i(TAG, "Mission: " + Long.toString(MissiontimeRemaining));
-
             List<Integer> targets_unsort = api.getActiveTargets();
-            List<Integer> targets = api.getActiveTargets(); // new ArrayList<>();
+            List<Integer> targets = new ArrayList<>(); // new ArrayList<>();
 
             if(targets_unsort.size() == 2){
                 if(value.get(targets_unsort.get(0)) < value.get(targets_unsort.get(1))){
@@ -389,7 +427,6 @@ public class YourService extends KiboRpcService {
 
             for (int i = 0; i < targets.size(); i++) {
 
-
                 cur_target = targets.get(i);
 
                 if(gotoTarget(pre_target, cur_target)){
@@ -397,6 +434,8 @@ public class YourService extends KiboRpcService {
                 }
             }
 
+            MissiontimeRemaining = api.getTimeRemaining().get(1);
+            Log.i(TAG, "Mission: " + Long.toString(MissiontimeRemaining));
             if (MissiontimeRemaining < 60000) {
                 Log.i(TAG, "while break");
                 break;
