@@ -4,13 +4,14 @@ import android.util.Log;
 
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
+import java.util.ArrayList;
 import java.util.List;
-import gov.nasa.arc.astrobee.Result;
-import gov.nasa.arc.astrobee.android.gs.MessageType;
+
 import gov.nasa.arc.astrobee.types.Point;
 import gov.nasa.arc.astrobee.types.Quaternion;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Random;
 
 import org.opencv.core.Mat;
 
@@ -23,11 +24,13 @@ import org.opencv.objdetect.QRCodeDetector;
  */
 
 public class YourService extends KiboRpcService {
-    private static final String TAG = "KiboFiendFyre";
+    private static final String TAG = "abcde";
     private float down = 5.25f;
     private Quaternion q;
     private Point p;
     private String QRmes;
+    private Long MissiontimeRemaining;
+    private Map<Integer, Integer> value = new HashMap<Integer, Integer>();
     private Point[] P = {
             new Point(10.4f    , -10      , 4.4f),       // start(0)
             new Point(11.225f  , -9.923f  , 5.469f),     //v
@@ -36,7 +39,7 @@ public class YourService extends KiboRpcService {
             new Point(10.485f  , -6.615f  , 5.17f),      //v
             new Point(11.037f  , -7.902f  , 5.312f),     //v
             new Point(11.307f  , -9.038f  , 4.931f),     //v
-            new Point(11.443f  , -8.5518   , 5),          // QR code(7)
+            new Point(11.443f  , -8.5518   , 4.9),          // QR code(7)
             new Point(11.143f  , -6.7607f , 4.48f),      // goal(8)
             new Point(10.4f    , -10      , down),         // startz(9 = 0 + 9)
             new Point(11.225f  , -9.923f  , down),
@@ -80,13 +83,99 @@ public class YourService extends KiboRpcService {
         map.put("INTBALL", "LOOKING_FORWARD_TO_SEE_YOU");
         map.put("BLANK", "NO_PROBLEM");
 
+        Map<Integer, String> nmap = new HashMap<>();
+        nmap.put(0, "JEM");
+        nmap.put(1,"COLUMBUS");
+        nmap.put(2, "RACK1");
+        nmap.put(3, "ASTROBEE");
+        nmap.put(4, "INTBALL");
+        nmap.put(5, "BLANK");
+
         MatOfPoint point = new MatOfPoint();
         QRCodeDetector detector = new QRCodeDetector();
-        Mat subpicture = api.getMatNavCam().submat(400, 600, 300, 700);
+        api.flashlightControlFront(0.05f);
+        Mat subpicture = api.getMatNavCam().submat(400, 650, 380, 720);
         api.saveMatImage(subpicture, photo_name(1000000));
 
         String data = detector.detectAndDecode(subpicture, point);
+        if(data.isEmpty()){
+            Random r = new Random();
+            int tmp = r.nextInt(6);
+            data = nmap.get(tmp);
+        }
+
         return map.get(data);
+    }
+
+    private boolean fastmove(int pre, int cur){
+        q = quaternion[cur];
+        if((pre == 1 && cur == 4) || (pre == 4 && cur == 1) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+            p = P[cur];
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(cur);
+            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
+            Log.i(TAG, "arrive " + Integer.toString(cur));
+            return true;
+        }
+        else if((pre == 1 && cur == 5) || (pre == 5 && cur == 1) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+            p = P[cur];
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(cur);
+            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
+            Log.i(TAG, "arrive " + Integer.toString(cur));
+            return true;
+        }
+        else if((pre == 1 && cur == 6) || (pre == 6 && cur == 1) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+            p = P[cur];
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(cur);
+            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
+            Log.i(TAG, "arrive " + Integer.toString(cur));
+            return true;
+        }
+        else if((pre == 2 && cur == 6) || (pre == 6 && cur == 2) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+            p = P[cur];
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(cur);
+            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
+            Log.i(TAG, "arrive " + Integer.toString(cur));
+            return true;
+        }
+        else if((pre == 4 && cur == 5) || (pre == 5 && cur == 4) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+            p = P[cur];
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(cur);
+            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
+            Log.i(TAG, "arrive " + Integer.toString(cur));
+            return true;
+        }
+        else if((pre == 4 && cur == 6) || (pre == 6 && cur == 4) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+            p = P[cur];
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(cur);
+            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
+            Log.i(TAG, "arrive " + Integer.toString(cur));
+            return true;
+        }
+        else if((pre == 5 && cur == 6) || (pre == 6 && cur == 5) && api.getTimeRemaining().get(0) >= 40000 && api.getTimeRemaining().get(1) >= 40000){
+            p = P[cur];
+            api.moveTo(p, q, false);
+            api.laserControl(true);
+            api.takeTargetSnapshot(cur);
+            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
+            Log.i(TAG, "arrive " + Integer.toString(cur));
+            return true;
+        }
+        else if(api.getTimeRemaining().get(0) < 40000 && api.getTimeRemaining().get(1) < 40000){
+            return true;
+        }
+        return false;
     }
 
     private void gotoStart(){
@@ -94,151 +183,229 @@ public class YourService extends KiboRpcService {
         q = quaternion[7];
         api.moveTo(p, q, false);
         Log.i(TAG, "arrive QR");
-        api.flashlightControlFront(0.05f);
         api.saveMatImage(api.getMatNavCam(), photo_name(103));
         QRmes = scanQRcode();
 
-
-        p = P[16];
-        api.moveTo(p, q, false);
-        Log.i(TAG, "back to QR z");
     }
 
-    private void gotoTarget(int pre, int cur){ // T1 ~ T6
+    private boolean gotoTarget(int pre, int cur){ // T1 ~ T6
+        if(fastmove(pre, cur)) return false;
+        if(!moveArea(pre, cur)) return false;
+        if(cur == 1 && api.getTimeRemaining().get(0) >= 25000 && api.getTimeRemaining().get(1) >= 25000) return false;
+        else if(cur == 2 && api.getTimeRemaining().get(0) >= 21000 && api.getTimeRemaining().get(1) >= 21000) return false;
+        else if(cur == 3 && api.getTimeRemaining().get(0) >= 27000 && api.getTimeRemaining().get(1) >= 27000) return false;
+        else if(cur == 4 && api.getTimeRemaining().get(0) >= 35000 && api.getTimeRemaining().get(1) >= 35000) return false;
+        else if(cur == 5 && api.getTimeRemaining().get(0) >= 21000 && api.getTimeRemaining().get(1) >= 21000) return false;
+        else if(cur == 6 && api.getTimeRemaining().get(0) >= 19000 && api.getTimeRemaining().get(1) >= 19000) return false;
+
+
         q = quaternion[cur];
-
-
-        if(pre <= 2 && cur <= 2){
-            p = P[cur];
-            api.moveTo(p, q, false);
-            api.laserControl(true);
-            api.takeTargetSnapshot(cur);
-            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
-            Log.i(TAG, "arrive " + Integer.toString(cur));
-
-
-            p = P[11];
-            api.moveTo(p, q, false);
-            Log.i(TAG, "arrivez2 " + Integer.toString(cur));
-        }
-        else if(pre > 2 && cur > 2){
-            p = P[cur];
-            api.moveTo(p, q, false);
-            api.laserControl(true);
-            api.takeTargetSnapshot(cur);
-            api.saveMatImage(api.getMatNavCam(), photo_name(cur));
-            Log.i(TAG, "arrive " + Integer.toString(cur));
-
-
-            p = P[16];
-            api.moveTo(p, q, false);
-            Log.i(TAG, "arrivez2 " + Integer.toString(cur));
-        }
-        else{
-            if(cur <= 2){
-                p = P[11];
-                api.moveTo(p, q, false);
-                Log.i(TAG, "arrivez " + Integer.toString(cur));
-
-
-                p = P[cur];
-                api.moveTo(p, q, false);
-                api.laserControl(true);
-                api.takeTargetSnapshot(cur);
-                api.saveMatImage(api.getMatNavCam(), photo_name(cur));
-                Log.i(TAG, "arrive " + Integer.toString(cur));
-
-
-                p = P[11];
-                api.moveTo(p, q, false);
-                Log.i(TAG, "arrivez2 " + Integer.toString(cur));
-            }
-            else{
-                p = P[16];
-                api.moveTo(p, q, false);
-                Log.i(TAG, "arrivez " + Integer.toString(cur));
-
-                p = P[cur];
-                api.moveTo(p, q, false);
-                api.laserControl(true);
-                api.takeTargetSnapshot(cur);
-                api.saveMatImage(api.getMatNavCam(), photo_name(cur));
-                Log.i(TAG, "arrive " + Integer.toString(cur));
-
-
-                p = P[16];
-                api.moveTo(p, q, false);
-                Log.i(TAG, "arrivez2 " + Integer.toString(cur));
-            }
-        }
-    }
-
-    private void gotoQR(){
-        p = P[16];
-        q = quaternion[7];
-
-
+        p = P[cur];
         api.moveTo(p, q, false);
-        Log.i(TAG, "arrive QR z");
+        api.laserControl(true);
+        api.takeTargetSnapshot(cur);
+        api.saveMatImage(api.getMatNavCam(), photo_name(cur));
+        Log.i(TAG, "arrive " + Integer.toString(cur));
 
-        p = P[7];
-        api.moveTo(p, q, false);
-        Log.i(TAG, "arrive QR");
-        api.flashlightControlFront(0.05f);
-        api.saveMatImage(api.getMatNavCam(), photo_name(103));
-        QRmes = scanQRcode();
-
-
-        p = P[16];
-        api.moveTo(p, q, false);
-        Log.i(TAG, "back to QR z");
+        return true;
     }
 
     private void gotoGoal(){
         api.notifyGoingToGoal();
-        p = P[17];
-        api.moveTo(p, q, false);
-        Log.i(TAG, "arrive goal z ");
+        if(api.getTimeRemaining().get(1) < 30000){
+            api.reportMissionCompletion(QRmes);
+        }
+        else{
+            p = P[17];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive goal z ");
+            api.reportMissionCompletion(QRmes);
 
-
-        p = P[8];
-        api.moveTo(p, q, false);
-        Log.i(TAG, "arrive goal");
-        api.reportMissionCompletion(QRmes);
-
+//            p = P[8];
+//            api.moveTo(p, q, false);
+//            Log.i(TAG, "arrive goal z ");
+//            api.reportMissionCompletion(QRmes);
+        }
     }
+
+    private void goto_Goal(int pre){
+        api.notifyGoingToGoal();
+
+        if(api.getTimeRemaining().get(1) >= 39000 && pre == 1){
+            p = P[17];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive goal z ");
+            api.reportMissionCompletion(QRmes);
+        }
+        else if(api.getTimeRemaining().get(1) >= 35000 && pre == 2){
+            p = P[17];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive goal z ");
+            api.reportMissionCompletion(QRmes);
+        }
+        else if(api.getTimeRemaining().get(1) >= 23000 && pre == 3){
+            p = P[8];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive goal z ");
+            api.reportMissionCompletion(QRmes);
+        }
+        else if(api.getTimeRemaining().get(1) >= 22000 && pre == 4){
+            p = P[8];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive goal z ");
+            api.reportMissionCompletion(QRmes);
+        }
+        else if(api.getTimeRemaining().get(1) >= 24000 && pre == 5){
+            p = P[17];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive goal z ");
+            api.reportMissionCompletion(QRmes);
+        }
+        else if(api.getTimeRemaining().get(1) >= 60000 && pre == 6){
+            moveArea(pre, pre);
+            p = P[17];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive goal z ");
+            api.reportMissionCompletion(QRmes);
+        }
+        else{
+            api.reportMissionCompletion(QRmes);
+        }
+    }
+
+    private boolean moveArea(int pre, int cur){
+        q = quaternion[cur];
+
+                ;
+        if(pre <= 2 && cur <= 2){
+            if(pre == 1){
+                if(cur == 2 && api.getTimeRemaining().get(0) >= 46000 && api.getTimeRemaining().get(1) >= 46000) return true;
+            }
+            else if(pre == 2){
+                if(cur == 1 && api.getTimeRemaining().get(0) >= 46000 && api.getTimeRemaining().get(1) >= 46000) return true;
+            }
+
+            p = P[11];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive area 1");
+        }
+        else if(pre > 2 && cur > 2){
+            if(pre == 3){
+                if(cur == 4 && api.getTimeRemaining().get(0) >= 62000 && api.getTimeRemaining().get(1) >= 62000) return true;
+                else if(cur == 5 && api.getTimeRemaining().get(0) >= 48000 && api.getTimeRemaining().get(1) >= 48000) return true;
+                else if(cur == 6 && api.getTimeRemaining().get(0) >= 46000 && api.getTimeRemaining().get(1) >= 46000) return true;
+            }
+            else if(pre == 4){
+                if(cur == 3 && api.getTimeRemaining().get(0) >= 62000 && api.getTimeRemaining().get(1) >= 62000) return true;
+            }
+            else if(pre == 5){
+                if(cur == 3 && api.getTimeRemaining().get(0) >= 48000 && api.getTimeRemaining().get(1) >= 48000) return true;
+            }
+            else if(pre == 6){
+                if(cur == 3 && api.getTimeRemaining().get(0) >= 46000 && api.getTimeRemaining().get(1) >= 46000) return true;
+            }
+
+            p = P[16];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive area 2");
+        }
+        else if(pre <= 2 && cur > 2){
+            if(pre == 1){
+                if(cur == 3 && api.getTimeRemaining().get(0) >= 76000 && api.getTimeRemaining().get(1) >= 76000) return true;
+            }
+            else if(pre == 2){
+                if(cur == 3 && api.getTimeRemaining().get(0) >= 72000 && api.getTimeRemaining().get(1) >= 72000) return true;
+                else if(cur == 4 && api.getTimeRemaining().get(0) >= 80000 && api.getTimeRemaining().get(1) >= 80000) return true;
+                else if(cur == 5 && api.getTimeRemaining().get(0) >= 66000 && api.getTimeRemaining().get(1) >= 66000) return true;
+            }
+
+
+
+            p = P[11];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive area 1");
+
+            p = P[16];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive area 2");
+        }
+        else if(pre > 2 && cur <= 2) {
+            if(pre == 3){
+                if(cur == 1 && api.getTimeRemaining().get(0) >= 76000 && api.getTimeRemaining().get(1) >= 76000) return true;
+                else if(cur == 2 && api.getTimeRemaining().get(0) >= 72000 && api.getTimeRemaining().get(1) >= 72000) return true;
+            }
+            else if(pre == 4){
+                if(cur == 2 && api.getTimeRemaining().get(0) >= 80000 && api.getTimeRemaining().get(1) >= 80000) return true;
+            }
+            else if(pre == 5){
+                if(cur == 2 && api.getTimeRemaining().get(0) >= 66000 && api.getTimeRemaining().get(1) >= 66000) return true;
+            }
+
+
+            p = P[16];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive area 2");
+
+
+            p = P[11];
+            api.moveTo(p, q, false);
+            Log.i(TAG, "arrive area 1");
+        }
+        return false;
+    }
+
 
 
     @Override
     protected void runPlan1(){
+        value.put(1, 30);
+        value.put(2, 20);
+        value.put(3, 40);
+        value.put(4, 20);
+        value.put(5, 30);
+        value.put(6, 30);
         api.startMission();
-
-
         gotoStart();
-        int pre_target = 3, cur_target = 3;
+        Log.i(TAG, "QR: " + QRmes);
+        int pre_target = 3, cur_target = 3, phase = 0;
 
         while(true) {
-            List<Long> MissiontimeRemaining = api.getTimeRemaining();
-            Log.i(TAG, "Mission: " + Long.toString(MissiontimeRemaining.get(1)));
-            if (MissiontimeRemaining.get(1) < 60000) break;
+            phase++;
+            MissiontimeRemaining = api.getTimeRemaining().get(1);
+            Log.i(TAG, "Mission: " + Long.toString(MissiontimeRemaining));
 
-            List<Integer> targets = api.getActiveTargets();
+            List<Integer> targets_unsort = api.getActiveTargets();
+            List<Integer> targets = api.getActiveTargets(); // new ArrayList<>();
+
+            if(targets_unsort.size() == 2){
+                if(value.get(targets_unsort.get(0)) < value.get(targets_unsort.get(1))){
+                    targets.add(targets_unsort.get(1));
+                    targets.add(targets_unsort.get(0));
+                }
+            }
+            else{
+                targets.add(targets_unsort.get(0));
+            }
 
             for (int i = 0; i < targets.size(); i++) {
-                List<Long> ActivetimeRemaining = api.getTimeRemaining();
-                Log.i(TAG, "Active: " + Long.toString(ActivetimeRemaining.get(0)));
-                if (ActivetimeRemaining.get(1) < 35000) break;
+
 
                 cur_target = targets.get(i);
 
-                gotoTarget(pre_target, cur_target);
-
-                pre_target = cur_target;
-
+                if(gotoTarget(pre_target, cur_target)){
+                    pre_target = cur_target;
+                }
             }
+
+            if (MissiontimeRemaining < 60000) {
+                Log.i(TAG, "while break");
+                break;
+            }
+
         }
 
-        gotoGoal();
+        // gotoGoal();
+        goto_Goal(pre_target);
     }
 
     @Override
